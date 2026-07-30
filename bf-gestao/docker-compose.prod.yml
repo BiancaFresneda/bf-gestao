@@ -1,0 +1,75 @@
+# Uso em produção na VPS: app + Postgres + Caddy (HTTPS automático).
+# Deploy: git pull && docker compose -f docker-compose.prod.yml up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      SESSION_SECRET: ${SESSION_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      NODE_ENV: production
+    expose:
+      - "3000"
+
+  # Chama o endpoint interno de geração de tarefas várias vezes ao dia — a geração é
+  # idempotente por construção (ver POST /api/internal/generate-tasks, Fase 2), então
+  # rodar de mais é seguro e serve de autorrecuperação contra falhas momentâneas.
+  # Não depende do processo do Next.js estar "vivo" no momento exato (causa provável do
+  # "não rodava automaticamente" no sistema antigo) — é um container separado e simples.
+  task-generation-cron:
+    image: alpine:3.20
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      TZ: America/Sao_Paulo
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        apk add --no-cache curl >/dev/null
+        echo "0 6,12,18 * * * curl -sf -X POST -H \"x-internal-secret: $$INTERNAL_API_SECRET\" http://app:3000/api/internal/generate-tasks >> /proc/1/fd/1 2>&1" > /etc/crontabs/root
+        crond -f -l 2
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,9 @@
+# Substitua pelo domínio real antes de subir na VPS.
+# O Caddy provisiona HTTPS automaticamente (Let's Encrypt) para o domínio configurado.
+gestao.seudominio.com.br {
+	reverse_proxy app:3000
+
+	header {
+		X-Accel-Buffering no
+	}
+}

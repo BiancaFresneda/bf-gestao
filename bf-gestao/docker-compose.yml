@@ -1,0 +1,18 @@
+# Uso local: só o Postgres. A aplicação roda via `npm run dev` fora do Docker
+# (mais rápido no Windows/Mac). Para o setup completo de produção (app + banco + Caddy),
+# veja docker-compose.prod.yml.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bfgestao
+      POSTGRES_PASSWORD: bfgestao
+      POSTGRES_DB: bfgestao
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

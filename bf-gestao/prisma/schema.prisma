@@ -1,0 +1,405 @@
+// BF Gestão — schema completo (todos os módulos), implementação por etapas.
+// Fase 0/1/2 (Fundação, Clientes, Tarefas) têm modelagem completa.
+// Fase 3+ (Certidões, Certificados, Contratos, Financeiro) têm modelagem inicial,
+// a ser detalhada quando cada fase for implementada.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Fundação ----------
+
+enum UserRole {
+  ADMIN
+  COLABORADOR
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  users              User[]
+  clientResponsibles ClientResponsible[]
+  taskTemplates      TaskTemplate[]
+
+  @@map("departments")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(COLABORADOR)
+  departmentId String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department           Department?         @relation(fields: [departmentId], references: [id])
+  clientResponsibles   ClientResponsible[]
+  assignedTasks        Task[]              @relation("TaskResponsible")
+  completedTasks       Task[]              @relation("TaskCompletedBy")
+  taskHistoryEntries   TaskHistory[]
+  certidoesResponsible Certidao[]
+  certificados         Certificado[]       @relation("CertificadoOwner")
+  certificadosResp     Certificado[]       @relation("CertificadoResponsible")
+
+  @@map("users")
+}
+
+// ---------- Clientes ----------
+
+enum ClientStatus {
+  ATIVO
+  INATIVO
+  SUSPENSO
+}
+
+model Client {
+  id          String       @id @default(cuid())
+  name        String
+  cnpj        String       @unique
+  tradeName   String?
+  taxRegime   String?
+  status      ClientStatus @default(ATIVO)
+  openingDate DateTime?
+  uf          String?
+  municipio   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  modules           ClientModule[]
+  responsibles      ClientResponsible[]
+  taskTemplateLinks ClientTaskTemplate[]
+  tasks             Task[]
+  certidoes         Certidao[]
+  certificados      Certificado[]
+  contratos         Contrato[]
+  receivables       ClientReceivable[]
+
+  @@map("clients")
+}
+
+enum ServiceModule {
+  FISCAL
+  PESSOAL
+  CONTABIL
+  SOCIETARIO
+  FINANCEIRO
+  LEGAL
+}
+
+model ClientModule {
+  id        String        @id @default(cuid())
+  clientId  String
+  module    ServiceModule
+  active    Boolean       @default(true)
+  startDate DateTime      @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, module])
+  @@map("client_modules")
+}
+
+model ClientResponsible {
+  id           String  @id @default(cuid())
+  clientId     String
+  userId       String
+  departmentId String?
+  role         String
+
+  client     Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  @@unique([clientId, userId, role])
+  @@map("client_responsibles")
+}
+
+// ---------- Tarefas (foco principal) ----------
+
+enum Periodicity {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMESTER
+  YEARLY
+  PONTUAL
+}
+
+enum BusinessDayAdjustment {
+  NONE
+  ANTECIPATE
+  POSTPONE
+}
+
+model TaskTemplate {
+  id                     String                @id @default(cuid())
+  name                   String
+  departmentId           String
+  module                 ServiceModule?
+  periodicity            Periodicity
+  // Regra estruturada (JSON), nunca texto livre — ex.: { "type": "dayOfMonth", "day": 20, "monthOffset": 1 }
+  legalDeadlineRule      Json
+  metaDeadlineOffsetDays Int                   @default(0)
+  businessDayAdjustment  BusinessDayAdjustment @default(POSTPONE)
+  geraMulta              Boolean               @default(false)
+  active                 Boolean               @default(true)
+  createdAt              DateTime              @default(now())
+
+  department      Department              @relation(fields: [departmentId], references: [id])
+  clientLinks     ClientTaskTemplate[]
+  tasks           Task[]
+  generationItems TaskGenerationRunItem[]
+
+  @@map("task_templates")
+}
+
+model ClientTaskTemplate {
+  id             String    @id @default(cuid())
+  clientId       String
+  taskTemplateId String
+  active         Boolean   @default(true)
+  vigenciaInicio DateTime  @default(now())
+  vigenciaFim    DateTime?
+
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  taskTemplate TaskTemplate @relation(fields: [taskTemplateId], references: [id])
+
+  @@unique([clientId, taskTemplateId])
+  @@map("client_task_templates")
+}
+
+enum TaskStatus {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+  ATRASADA
+  CANCELADA
+}
+
+model Task {
+  id                String     @id @default(cuid())
+  clientId          String
+  taskTemplateId    String?
+  title             String
+  // Chave canônica derivada de (periodicidade, competenciaInicio) — nunca do prazo.
+  competenciaKey    String
+  competenciaInicio DateTime
+  competenciaFim    DateTime
+  prazoLegal        DateTime
+  prazoMeta         DateTime
+  status            TaskStatus @default(PENDENTE)
+  responsibleUserId String?
+  priority          Int?
+  notes             String?
+  completedAt       DateTime?
+  completedById     String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  taskTemplate    TaskTemplate? @relation(fields: [taskTemplateId], references: [id])
+  responsibleUser User?         @relation("TaskResponsible", fields: [responsibleUserId], references: [id])
+  completedBy     User?         @relation("TaskCompletedBy", fields: [completedById], references: [id])
+  history         TaskHistory[]
+
+  // Garante idempotência da geração automática — nunca duplica a mesma competência
+  // para o mesmo vínculo cliente+template.
+  @@unique([clientId, taskTemplateId, competenciaKey])
+  @@index([status])
+  @@index([prazoLegal])
+  @@map("tasks")
+}
+
+model TaskHistory {
+  id        String      @id @default(cuid())
+  taskId    String
+  userId    String?
+  action    String
+  oldStatus TaskStatus?
+  newStatus TaskStatus?
+  comment   String?
+  createdAt DateTime    @default(now())
+
+  task Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("task_history")
+}
+
+enum GenerationTrigger {
+  CRON
+  MANUAL
+}
+
+enum GenerationStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model TaskGenerationRun {
+  id           String            @id @default(cuid())
+  runDate      DateTime          @default(now())
+  triggeredBy  GenerationTrigger
+  status       GenerationStatus  @default(RUNNING)
+  createdCount Int               @default(0)
+  skippedCount Int               @default(0)
+  errorCount   Int               @default(0)
+  startedAt    DateTime          @default(now())
+  finishedAt   DateTime?
+
+  items TaskGenerationRunItem[]
+
+  @@map("task_generation_runs")
+}
+
+enum RunItemResult {
+  CREATED
+  SKIPPED
+  ERROR
+}
+
+model TaskGenerationRunItem {
+  id             String        @id @default(cuid())
+  runId          String
+  clientId       String
+  taskTemplateId String
+  competenciaKey String
+  result         RunItemResult
+  errorMessage   String?
+
+  run          TaskGenerationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  taskTemplate TaskTemplate      @relation(fields: [taskTemplateId], references: [id])
+
+  @@map("task_generation_run_items")
+}
+
+enum HolidayScope {
+  NACIONAL
+  ESTADUAL
+  MUNICIPAL
+}
+
+model Holiday {
+  id        String       @id @default(cuid())
+  date      DateTime
+  name      String
+  scope     HolidayScope @default(NACIONAL)
+  uf        String?
+  municipio String?
+
+  @@unique([date, scope, uf, municipio])
+  @@map("holidays")
+}
+
+// ---------- Certidões e Certificados (esboço — detalhar na Fase 3) ----------
+
+enum CertidaoTipo {
+  FEDERAL
+  ESTADUAL
+  MUNICIPAL
+  FGTS
+  TRABALHISTA
+}
+
+model Certidao {
+  id                String       @id @default(cuid())
+  clientId          String
+  tipo              CertidaoTipo
+  dataEmissao       DateTime?
+  dataValidade      DateTime
+  arquivoUrl        String?
+  responsibleUserId String?
+  createdAt         DateTime     @default(now())
+
+  client          Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  responsibleUser User?  @relation(fields: [responsibleUserId], references: [id])
+
+  @@map("certidoes")
+}
+
+enum CertificadoTipo {
+  E_CNPJ
+  E_CPF
+  NFE
+  OUTRO
+}
+
+model Certificado {
+  id                String          @id @default(cuid())
+  clientId          String?
+  ownerUserId       String?
+  tipo              CertificadoTipo
+  numeroSerie       String?
+  dataEmissao       DateTime?
+  dataValidade      DateTime
+  arquivoUrl        String?
+  responsibleUserId String?
+  createdAt         DateTime        @default(now())
+
+  client          Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  ownerUser       User?   @relation("CertificadoOwner", fields: [ownerUserId], references: [id])
+  responsibleUser User?   @relation("CertificadoResponsible", fields: [responsibleUserId], references: [id])
+
+  @@map("certificados")
+}
+
+// ---------- Contratos (esboço — detalhar na Fase 4) ----------
+
+enum ContratoStatus {
+  ATIVO
+  ENCERRADO
+  SUSPENSO
+}
+
+model Contrato {
+  id             String         @id @default(cuid())
+  clientId       String
+  tipoServico    String
+  valorMensal    Decimal        @db.Decimal(12, 2)
+  dataInicio     DateTime
+  vigenciaFim    DateTime?
+  formaPagamento String?
+  status         ContratoStatus @default(ATIVO)
+  dataReajuste   DateTime?
+  arquivoUrl     String?
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("contratos")
+}
+
+// ---------- Financeiro (esboço — detalhar na Fase 5) ----------
+
+model ClientReceivable {
+  id          String    @id @default(cuid())
+  clientId    String
+  competencia String?
+  valor       Decimal   @db.Decimal(12, 2)
+  vencimento  DateTime
+  paidAt      DateTime?
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_receivables")
+}
+
+model CashAccount {
+  id      String  @id @default(cuid())
+  name    String
+  bank    String?
+  balance Decimal @default(0) @db.Decimal(12, 2)
+
+  @@map("cash_accounts")
+}
