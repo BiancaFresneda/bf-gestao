@@ -1,0 +1,382 @@
+[
+  {
+    "name": "A. D. EVANGELISTA & CIA LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "44087217000156",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "9832882",
+    "inscricaoEstadual": "240449420",
+    "municipio": "Boa Vista",
+    "uf": "RR"
+  },
+  {
+    "name": "ACAD HUB DE EDUCACAO LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "62461195000124",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "7280629",
+    "inscricaoEstadual": "203125878",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "AGY AUTO PARTS LTDA",
+    "tipoAtividade": "Comércio",
+    "cnpj": "30428105000107",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "4610636",
+    "inscricaoEstadual": "107269090",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ÁPICE ASSESSORIA EMPRESARIAL",
+    "tipoAtividade": "Serviços",
+    "cnpj": "20174896000132",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "3812847",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ASSOCIACAO CONDOMINIAL CASTRO, ALARCAO E PASSOS",
+    "tipoAtividade": "Associação",
+    "cnpj": "61855289000115",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "7203454",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ASSOCIAÇÃO DOS SERVIDORES",
+    "tipoAtividade": "Associação",
+    "cnpj": "12234733000170",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "Isento",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Brasília",
+    "uf": "DF"
+  },
+  {
+    "name": "BASTOS BORGES & CRUVINEL ADVOGADOS",
+    "tipoAtividade": "Serviços",
+    "cnpj": "33061978000112",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "4798325",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "BF SERVIÇOS CONTÁBEIS E ADMINISTRATIVOS LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "41300289000141",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "5328055",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "BLACK EAGLE TREINAMENTOS LTDA",
+    "tipoAtividade": "Comércio e Serviços",
+    "cnpj": "40630341000165",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "144496",
+    "inscricaoEstadual": "263963977",
+    "municipio": "Blumenau",
+    "uf": "SC"
+  },
+  {
+    "name": "BLESSED FONDUE LTDA",
+    "tipoAtividade": "Comércio",
+    "cnpj": "46079054000195",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "/",
+    "inscricaoEstadual": "13934378-4",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  },
+  {
+    "name": "CASTRO ADVOGADOS ASSOCIADOS ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "19568754000170",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "3679942",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "CONTART REPRESENTACOES LTDA ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "29745430000114",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "33858",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Pires do Rio",
+    "uf": "GO"
+  },
+  {
+    "name": "CORREA CONTART SOCIEDADE INDIVIDUAL DE ADVOCACIA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "33689629000140",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "99933298",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Piracanjuba",
+    "uf": "GO"
+  },
+  {
+    "name": "CREDLINE SOLUÇÕES FINANCEIRAS",
+    "tipoAtividade": "Serviços",
+    "cnpj": "67256091000100",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": null,
+    "inscricaoEstadual": null,
+    "municipio": "Sinop",
+    "uf": "MT"
+  },
+  {
+    "name": "DEZELI MARKETING DIGITAL LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "43487973000100",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "39105",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Sinop",
+    "uf": "MT"
+  },
+  {
+    "name": "EASY MEDICAL SERVICE",
+    "tipoAtividade": "Serviços",
+    "cnpj": "55945535000127",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "3742423",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Boa Vista",
+    "uf": "RR"
+  },
+  {
+    "name": "EFP - ESCOLA DE FORMACAO PUBLICA LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "27061606000193",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "4375432",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ERICO DE PINA CABRAL SOCIEDADE INDIVIDUAL DE ADV.",
+    "tipoAtividade": "Serviços",
+    "cnpj": "45052765000103",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "5604834",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ESPÍNDOLA E OLIVEIRA LTDA ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "46656134000166",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "5718376",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "FMNS BAR E RESTAURANTE LTDA",
+    "tipoAtividade": "Comércio",
+    "cnpj": "54426003000110",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": null,
+    "inscricaoEstadual": null,
+    "municipio": "Vitória",
+    "uf": "ES"
+  },
+  {
+    "name": "FRANCIO E BIASUZ CONSULTORIA AGROPECUARIA LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "63692210000108",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": null,
+    "inscricaoEstadual": null,
+    "municipio": "Itaituba",
+    "uf": "PA"
+  },
+  {
+    "name": "GBS ESTÚDIO LTDA ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "50167018000150",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "820933000125",
+    "inscricaoEstadual": "820933000125",
+    "municipio": "Brasília",
+    "uf": "DF"
+  },
+  {
+    "name": "INC 3 PRODUÇÕES LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "20294248000110",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "3783723",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "JOÃO VICTOR SOCIEDADE INDIVIDUAL DE ADVOCACIA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "50159397000137",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "643721",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Senador Canedo",
+    "uf": "GO"
+  },
+  {
+    "name": "JOSÉ FCO DE ARAUJO FILHO",
+    "tipoAtividade": "Serviços",
+    "cnpj": "59327228000133",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "Isento",
+    "inscricaoEstadual": "30014382",
+    "municipio": "Senador Canedo",
+    "uf": "GO"
+  },
+  {
+    "name": "JULIANO ALVES VAZ SOCIEDADE INDIVIDUAL DE ADVOCACIA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "46419570000111",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "5701066",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "LUXX IMPORT LTDA",
+    "tipoAtividade": "Comércio",
+    "cnpj": "31583145000196",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "7759916",
+    "inscricaoEstadual": "203990951",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "MEDTRAN SERVIÇOS MÉDICOS LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "52507606000111",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "266456",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  },
+  {
+    "name": "MORAIS CLÍNICA VETERINÁRIA LTDA",
+    "tipoAtividade": "Comércio e Serviços",
+    "cnpj": "52048965000158",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "263582",
+    "inscricaoEstadual": "140170065",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  },
+  {
+    "name": "MORAIS COMÉRCIO DE FONDUE LTDA ",
+    "tipoAtividade": "Comércio",
+    "cnpj": "43188905000140",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "138922012",
+    "inscricaoEstadual": "138922012",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  },
+  {
+    "name": "MORAIS RADIOLOGIA ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "41151428000112",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "202306",
+    "inscricaoEstadual": "138622809",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  },
+  {
+    "name": "PAULO OTAVIO NALINI SOCIEDADE ",
+    "tipoAtividade": "Serviços",
+    "cnpj": "40711480000113",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "5335523",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "RAPHAEL AMPARO SOCIEDADE INDIV. DE ADV.",
+    "tipoAtividade": "Serviços",
+    "cnpj": "45132510000150",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "5604761",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "ROELLES ELETRÔNICA LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "33969150000167",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": null,
+    "inscricaoEstadual": null,
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "SMART AVIATION LTDA",
+    "tipoAtividade": "Comércio",
+    "cnpj": "46360645000136",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "110383",
+    "inscricaoEstadual": "109272544",
+    "municipio": "Anápolis",
+    "uf": "GO"
+  },
+  {
+    "name": "SOFF PARTICIPAÇÕES LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "55325128000117",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "6591523",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Goiânia",
+    "uf": "GO"
+  },
+  {
+    "name": "TCHE IMÓVEIS - CONSTRUÇÃO E VENDA LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "20863596000160",
+    "taxRegime": "Simples Nacional",
+    "inscricaoMunicipal": "828724400142",
+    "inscricaoEstadual": null,
+    "municipio": "Brasília",
+    "uf": "DF"
+  },
+  {
+    "name": "TECHVITAL LTDA",
+    "tipoAtividade": "Serviços",
+    "cnpj": "31598243000105",
+    "taxRegime": "Lucro Presumido",
+    "inscricaoMunicipal": "284599",
+    "inscricaoEstadual": "Isento",
+    "municipio": "Cuiabá",
+    "uf": "MT"
+  }
+]

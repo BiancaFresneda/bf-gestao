@@ -64,18 +64,29 @@ enum ClientStatus {
   SUSPENSO
 }
 
+enum ClientPersonType {
+  PF
+  PJ
+}
+
 model Client {
-  id          String       @id @default(cuid())
-  name        String
-  cnpj        String       @unique
-  tradeName   String?
-  taxRegime   String?
-  status      ClientStatus @default(ATIVO)
-  openingDate DateTime?
-  uf          String?
-  municipio   String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                 String           @id @default(cuid())
+  name               String
+  personType         ClientPersonType @default(PJ)
+  cnpj               String?          @unique
+  cpf                String?          @unique
+  tradeName          String?
+  tipoAtividade      String?
+  taxRegime          String?
+  inscricaoMunicipal String?
+  inscricaoEstadual  String?
+  status             ClientStatus     @default(ATIVO)
+  openingDate        DateTime?
+  country            String           @default("BR")
+  uf                 String?
+  municipio          String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   modules           ClientModule[]
   responsibles      ClientResponsible[]
