@@ -82,11 +82,7 @@ export function ColumnFilterHeader({
                   key={option}
                   className="flex items-center gap-2 rounded px-1 py-0.5 text-xs font-normal text-[#24252A] hover:bg-[#F7F5EF]"
                 >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(option)}
-                    onChange={() => toggleValue(option)}
-                  />
+                  <input type="checkbox" checked={selected.has(option)} onChange={() => toggleValue(option)} />
                   <span className="truncate">{option}</span>
                 </label>
               ))}

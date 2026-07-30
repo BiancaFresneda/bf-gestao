@@ -3,6 +3,7 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { TaskTemplateForm } from "../task-template-form";
 import { updateTaskTemplate } from "../actions";
+import { ClientLinksSection } from "../client-links-section";
 
 export default async function EditarTarefaPage({
   params,
@@ -12,14 +13,25 @@ export default async function EditarTarefaPage({
   await verifySession();
   const { id } = await params;
 
-  const [template, departments] = await Promise.all([
+  const [template, departments, clients] = await Promise.all([
     prisma.taskTemplate.findUnique({ where: { id } }),
     prisma.department.findMany({ orderBy: { name: "asc" } }),
+    prisma.client.findMany({
+      where: { status: "ATIVO" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, taskTemplateLinks: { where: { taskTemplateId: id }, select: { active: true } } },
+    }),
   ]);
 
   if (!template) {
     notFound();
   }
+
+  const clientOptions = clients.map((client) => ({
+    id: client.id,
+    name: client.name,
+    linked: client.taskTemplateLinks[0]?.active ?? false,
+  }));
 
   return (
     <div className="space-y-6 p-8">
@@ -35,6 +47,8 @@ export default async function EditarTarefaPage({
           action={updateTaskTemplate.bind(null, template.id)}
         />
       </section>
+
+      <ClientLinksSection templateId={template.id} clients={clientOptions} />
     </div>
   );
 }

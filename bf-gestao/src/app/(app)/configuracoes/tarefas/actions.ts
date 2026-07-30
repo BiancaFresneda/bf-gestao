@@ -135,3 +135,15 @@ export async function toggleTaskTemplateActive(templateId: string, active: boole
   await prisma.taskTemplate.update({ where: { id: templateId }, data: { active } });
   revalidatePath("/configuracoes/tarefas");
 }
+
+export async function setClientTaskTemplateLink(templateId: string, clientId: string, active: boolean) {
+  await requireAdmin();
+
+  await prisma.clientTaskTemplate.upsert({
+    where: { clientId_taskTemplateId: { clientId, taskTemplateId: templateId } },
+    create: { clientId, taskTemplateId: templateId, active },
+    update: { active },
+  });
+
+  revalidatePath(`/configuracoes/tarefas/${templateId}`);
+}

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 import { saveUploadedFile } from "@/lib/file-storage";
 import { extractCertificateExpiry } from "@/lib/certificate";
+import { formatDateBR } from "@/lib/format";
 
 const CertificadoSchema = z.object({
   tipo: z.enum(["E_CNPJ", "E_CPF", "NFE", "OUTRO"]),
@@ -65,7 +66,7 @@ export async function saveCertificado(
   revalidatePath(`/clientes/${clientId}`);
   revalidatePath("/certificados");
 
-  return { notice: `Certificado salvo. Vencimento detectado automaticamente no arquivo: ${expiry.toLocaleDateString("pt-BR")}.` };
+  return { notice: `Certificado salvo. Vencimento detectado automaticamente no arquivo: ${formatDateBR(expiry)}.` };
 }
 
 export async function deleteCertificado(clientId: string, certificadoId: string) {

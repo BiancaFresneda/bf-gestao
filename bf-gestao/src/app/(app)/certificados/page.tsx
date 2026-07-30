@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { expiryStatus } from "@/lib/format";
+import { expiryStatus, formatDateBR } from "@/lib/format";
 
 const TIPO_LABEL: Record<string, string> = {
   E_CNPJ: "e-CNPJ",
@@ -59,7 +59,7 @@ export default async function CertificadosPage() {
                     </td>
                     <td className="py-2 text-[#7D7874]">{TIPO_LABEL[cert.tipo] ?? cert.tipo}</td>
                     <td className="py-2 text-[#7D7874]">
-                      {cert.dataValidade.toLocaleDateString("pt-BR")}
+                      {formatDateBR(cert.dataValidade)}
                     </td>
                     <td className="py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs ${status.className}`}>

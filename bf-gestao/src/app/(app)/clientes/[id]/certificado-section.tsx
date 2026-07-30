@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveCertificado, deleteCertificado } from "./certificado-actions";
-import { expiryStatus } from "@/lib/format";
+import { expiryStatus, formatDateBR } from "@/lib/format";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]";
@@ -51,7 +51,7 @@ export function CertificadoSection({
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-[#24252A]">{TIPO_LABEL[cert.tipo] ?? cert.tipo}</span>
                   <span className="text-xs text-[#7D7874]">
-                    Vence em {new Date(cert.dataValidade).toLocaleDateString("pt-BR")}
+                    Vence em {formatDateBR(cert.dataValidade)}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-xs ${status.className}`}>{status.label}</span>
                 </div>

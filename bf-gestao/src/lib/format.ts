@@ -14,6 +14,16 @@ export function formatDocument(client: { personType: string; cnpj?: string | nul
   return "—";
 }
 
+// Usa os componentes UTC da data, nunca o fuso local de exibição — essas datas são
+// pontos de calendário (venceu tal dia, prazo é tal dia), não instantes exatos. Formatar
+// pelo fuso local (ex.: America/Sao_Paulo, UTC-3) faria meia-noite UTC "voltar" um dia.
+export function formatDateBR(date: string | Date): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${d.getUTCFullYear()}`;
+}
+
 export function expiryStatus(dataValidade: string | Date) {
   const isExpired = new Date(dataValidade).getTime() < Date.now();
   if (isExpired) {

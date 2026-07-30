@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatDocument } from "@/lib/format";
-import { ColumnFilterHeader } from "./column-filter-header";
+import { ColumnFilterHeader } from "@/components/column-filter-header";
 
 type ClientRow = {
   id: string;
