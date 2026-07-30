@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { setClientTaskTemplateLink } from "./actions";
+import { saveClientTaskTemplateLinks } from "./actions";
 
 type ClientOption = { id: string; name: string; linked: boolean };
 
@@ -13,21 +13,38 @@ export function ClientLinksSection({
   clients: ClientOption[];
 }) {
   const [search, setSearch] = useState("");
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(clients.filter((c) => c.linked).map((c) => c.id)),
+  );
   const [isPending, startTransition] = useTransition();
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const filtered = useMemo(
     () => clients.filter((c) => c.name.toLowerCase().includes(search.toLowerCase())),
     [clients, search],
   );
 
-  const linkedCount = clients.filter((c) => c.linked).length;
+  const initialSelected = useMemo(() => new Set(clients.filter((c) => c.linked).map((c) => c.id)), [clients]);
+  const isDirty =
+    selected.size !== initialSelected.size || Array.from(selected).some((id) => !initialSelected.has(id));
 
-  function toggle(clientId: string, next: boolean) {
-    setPendingId(clientId);
+  function toggle(clientId: string) {
+    setSavedMessage(null);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(clientId)) {
+        next.delete(clientId);
+      } else {
+        next.add(clientId);
+      }
+      return next;
+    });
+  }
+
+  function handleSave() {
     startTransition(async () => {
-      await setClientTaskTemplateLink(templateId, clientId, next);
-      setPendingId(null);
+      await saveClientTaskTemplateLinks(templateId, Array.from(selected));
+      setSavedMessage("Vínculos salvos.");
     });
   }
 
@@ -35,10 +52,13 @@ export function ClientLinksSection({
     <section className="mt-6 max-w-3xl rounded-xl border border-stone-200 bg-white p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-stone-900">Clientes vinculados</h2>
-        <span className="text-xs text-stone-500">{linkedCount} de {clients.length} clientes</span>
+        <span className="text-xs text-stone-500">
+          {selected.size} de {clients.length} clientes
+        </span>
       </div>
       <p className="mt-1 text-xs text-stone-500">
-        Marque os clientes para os quais esta tarefa deve ser gerada automaticamente.
+        Marque os clientes para os quais esta tarefa deve ser gerada automaticamente e clique em
+        Salvar.
       </p>
 
       <input
@@ -54,9 +74,8 @@ export function ClientLinksSection({
             <span className="text-sm text-stone-800">{client.name}</span>
             <input
               type="checkbox"
-              checked={client.linked}
-              disabled={isPending && pendingId === client.id}
-              onChange={(event) => toggle(client.id, event.target.checked)}
+              checked={selected.has(client.id)}
+              onChange={() => toggle(client.id)}
             />
           </li>
         ))}
@@ -64,6 +83,21 @@ export function ClientLinksSection({
           <li className="py-4 text-center text-sm text-stone-400">Nenhum cliente encontrado.</li>
         )}
       </ul>
+
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isPending || !isDirty}
+          className="rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+        >
+          {isPending ? "Salvando..." : "Salvar"}
+        </button>
+        {!isPending && savedMessage && <span className="text-xs text-stone-500">{savedMessage}</span>}
+        {!isPending && isDirty && !savedMessage && (
+          <span className="text-xs text-stone-400">Há alterações não salvas.</span>
+        )}
+      </div>
     </section>
   );
 }

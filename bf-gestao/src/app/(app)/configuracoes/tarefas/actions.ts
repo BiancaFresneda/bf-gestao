@@ -121,14 +121,27 @@ export async function toggleTaskTemplateActive(templateId: string, active: boole
   revalidatePath("/configuracoes/tarefas");
 }
 
-export async function setClientTaskTemplateLink(templateId: string, clientId: string, active: boolean) {
+export async function saveClientTaskTemplateLinks(templateId: string, clientIds: string[]) {
   await requireAdmin();
 
-  await prisma.clientTaskTemplate.upsert({
-    where: { clientId_taskTemplateId: { clientId, taskTemplateId: templateId } },
-    create: { clientId, taskTemplateId: templateId, active },
-    update: { active },
-  });
+  const selected = new Set(clientIds);
+  const existing = await prisma.clientTaskTemplate.findMany({ where: { taskTemplateId: templateId } });
+  const existingByClient = new Map(existing.map((link) => [link.clientId, link]));
+
+  await prisma.$transaction([
+    ...Array.from(selected)
+      .filter((clientId) => !existingByClient.get(clientId)?.active)
+      .map((clientId) =>
+        prisma.clientTaskTemplate.upsert({
+          where: { clientId_taskTemplateId: { clientId, taskTemplateId: templateId } },
+          create: { clientId, taskTemplateId: templateId, active: true },
+          update: { active: true },
+        }),
+      ),
+    ...existing
+      .filter((link) => link.active && !selected.has(link.clientId))
+      .map((link) => prisma.clientTaskTemplate.update({ where: { id: link.id }, data: { active: false } })),
+  ]);
 
   revalidatePath(`/configuracoes/tarefas/${templateId}`);
 }
