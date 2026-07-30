@@ -32,7 +32,11 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
+      CERTIFICATE_ENCRYPTION_KEY: ${CERTIFICATE_ENCRYPTION_KEY}
+      UPLOADS_DIR: /app/uploads
       NODE_ENV: production
+    volumes:
+      - uploads_data:/app/uploads
     expose:
       - "3000"
 
@@ -73,3 +77,4 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  uploads_data:

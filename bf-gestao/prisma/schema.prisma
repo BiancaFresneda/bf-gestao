@@ -383,16 +383,19 @@ enum CertificadoTipo {
 }
 
 model Certificado {
-  id                String          @id @default(cuid())
-  clientId          String?
-  ownerUserId       String?
-  tipo              CertificadoTipo
-  numeroSerie       String?
-  dataEmissao       DateTime?
-  dataValidade      DateTime
-  arquivoUrl        String?
-  responsibleUserId String?
-  createdAt         DateTime        @default(now())
+  id                  String          @id @default(cuid())
+  clientId            String?
+  ownerUserId         String?
+  tipo                CertificadoTipo
+  numeroSerie         String?
+  dataEmissao         DateTime?
+  dataValidade        DateTime
+  arquivoUrl          String?
+  arquivoNomeOriginal String?
+  // Sempre criptografada (AES-256-GCM) — ver src/lib/crypto.ts. Nunca armazenar em texto puro.
+  senhaCriptografada  String?
+  responsibleUserId   String?
+  createdAt           DateTime        @default(now())
 
   client          Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
   ownerUser       User?   @relation("CertificadoOwner", fields: [ownerUserId], references: [id])

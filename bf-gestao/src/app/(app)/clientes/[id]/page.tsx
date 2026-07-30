@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { formatDocument } from "@/lib/format";
 import { ClientForm } from "./client-form";
 
 export default async function ClientEditPage({
@@ -14,7 +15,11 @@ export default async function ClientEditPage({
 
   const client = await prisma.client.findUnique({
     where: { id },
-    include: { partners: true, activities: true },
+    include: {
+      partners: true,
+      activities: true,
+      certificados: { orderBy: { dataValidade: "desc" } },
+    },
   });
 
   if (!client) {
@@ -35,7 +40,8 @@ export default async function ClientEditPage({
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-[#24252A]">{client.name}</h1>
         <p className="mt-1 text-sm text-[#7D7874]">
-          {client.cnpj ?? client.cpf} · {client.municipio ? `${client.municipio}/${client.uf}` : "Endereço não cadastrado"}
+          {formatDocument(client)} ·{" "}
+          {client.municipio ? `${client.municipio}/${client.uf}` : "Endereço não cadastrado"}
         </p>
       </div>
 
@@ -66,6 +72,13 @@ export default async function ClientEditPage({
             code: a.code,
             description: a.description,
             isPrimary: a.isPrimary,
+          })),
+          certificados: client.certificados.map((c) => ({
+            id: c.id,
+            tipo: c.tipo,
+            dataValidade: c.dataValidade.toISOString(),
+            arquivoNomeOriginal: c.arquivoNomeOriginal,
+            arquivoUrl: c.arquivoUrl,
           })),
         }}
       />

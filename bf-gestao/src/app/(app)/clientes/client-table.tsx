@@ -2,18 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-function formatDoc(client: { personType: string; cnpj: string | null; cpf: string | null }) {
-  if (client.personType === "PJ" && client.cnpj) {
-    const d = client.cnpj;
-    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-  }
-  if (client.cpf) {
-    const d = client.cpf;
-    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-  }
-  return "—";
-}
+import { formatDocument } from "@/lib/format";
 
 type ClientRow = {
   id: string;
@@ -99,7 +88,7 @@ export function ClientTable({ clients }: { clients: ClientRow[] }) {
                   {client.name}
                 </Link>
               </td>
-              <td className="py-2 text-[#7D7874]">{formatDoc(client)}</td>
+              <td className="py-2 text-[#7D7874]">{formatDocument(client)}</td>
               <td className="py-2 text-[#7D7874]">{client.tipoAtividade ?? "—"}</td>
               <td className="py-2 text-[#7D7874]">{client.taxRegime ?? "—"}</td>
               <td className="py-2 text-[#7D7874]">

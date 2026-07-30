@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { lookupCnpj, saveClientFull } from "../actions";
+import { formatDocument } from "@/lib/format";
+import { CertificadoSection } from "./certificado-section";
 
 type Partner = { name: string; cpf: string | null; ownershipPercent: number | null };
 type Activity = { code: string; description: string; isPrimary: boolean };
@@ -26,6 +28,13 @@ type ClientData = {
   uf: string | null;
   partners: Partner[];
   activities: Activity[];
+  certificados: {
+    id: string;
+    tipo: string;
+    dataValidade: string;
+    arquivoNomeOriginal: string | null;
+    arquivoUrl: string | null;
+  }[];
 };
 
 const inputClass =
@@ -162,7 +171,7 @@ export function ClientForm({ client }: { client: ClientData }) {
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={labelClass}>Documento</label>
-            <input value={client.cnpj ?? client.cpf ?? ""} disabled className={`${inputClass} bg-[#F7F5EF]`} />
+            <input value={formatDocument(client)} disabled className={`${inputClass} bg-[#F7F5EF]`} />
           </div>
           <div>
             <label className={labelClass}>Status</label>
@@ -313,6 +322,8 @@ export function ClientForm({ client }: { client: ClientData }) {
           <span>+</span> Adicionar sócio
         </button>
       </section>
+
+      <CertificadoSection clientId={client.id} certificados={client.certificados} />
 
       {error && <p className="text-sm text-red-700">{error}</p>}
       {notice && !error && <p className="text-sm text-[#4C7A46]">{notice}</p>}
