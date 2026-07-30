@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decrypt, SESSION_COOKIE } from "@/lib/session";
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/login", "/cadastro"];
 
 // Checagem otimista (só lê o cookie, sem tocar no banco) — a checagem definitiva
 // acontece no DAL (src/lib/dal.ts), chamado em cada Server Component/Server Action.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { login } from "./actions";
 import { BrandMark } from "@/components/brand-mark";
 
@@ -63,6 +64,13 @@ export default function LoginPage() {
               {pending ? "Entrando..." : "Entrar"}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-sm text-[#7D7874]">
+            Primeiro acesso?{" "}
+            <Link href="/cadastro" className="font-medium text-[#3D3E40] hover:underline">
+              Criar conta
+            </Link>
+          </p>
         </div>
       </div>
     </main>
