@@ -14,7 +14,6 @@ async function requireAdmin() {
 }
 
 const PERIODICITIES = ["WEEKLY", "MONTHLY", "QUARTERLY", "SEMESTER", "YEARLY", "PONTUAL"] as const;
-const ADJUSTMENTS = ["NONE", "ANTECIPATE", "POSTPONE"] as const;
 
 const TaskTemplateSchema = z.object({
   name: z.string().trim().min(2, { error: "Informe o nome da tarefa." }),
@@ -22,27 +21,20 @@ const TaskTemplateSchema = z.object({
   periodicity: z.enum(PERIODICITIES),
   competenciaOffsetMonths: z.coerce.number().int(),
   metaDeadlineOffsetDays: z.coerce.number().int(),
-  businessDayAdjustment: z.enum(ADJUSTMENTS),
   geraMulta: z.coerce.boolean(),
   active: z.coerce.boolean(),
 });
 
-// A UI apresenta a regra como "dia fixo do mês" ou "dia útil" (e, dentro de dia útil,
-// "enésimo" ou "último") — mas o formato salvo no banco (RuleSchema) não muda.
-function parseRuleFromFormData(formData: FormData) {
-  const mode = formData.get("ruleMode");
-  const monthOffset = formData.get("ruleMonthOffset") || 0;
-
-  if (mode === "fixedDay") {
-    return RuleSchema.parse({ type: "dayOfMonth", day: formData.get("ruleDay"), monthOffset });
+// O dia do "Data legal" sempre cai no mês oposto ao deslocamento da competência: se a
+// tarefa é gerada em julho apontando pra competência de junho (offset -1), o vencimento
+// cai em julho (+1 em relação à competência) — por isso o monthOffset nunca é digitado
+// à parte, é sempre o inverso do deslocamento de competência.
+function parseRuleFromFormData(formData: FormData, competenciaOffsetMonths: number) {
+  const day = formData.get("ruleDay");
+  if (!day) {
+    return RuleSchema.parse({ type: "unset" });
   }
-  if (mode === "businessDay") {
-    if (formData.get("ruleCountMode") === "last") {
-      return RuleSchema.parse({ type: "lastBusinessDay", monthOffset });
-    }
-    return RuleSchema.parse({ type: "nthBusinessDay", n: formData.get("ruleN"), monthOffset });
-  }
-  return RuleSchema.parse({ type: "unset" });
+  return RuleSchema.parse({ type: "dayOfMonth", day, monthOffset: -competenciaOffsetMonths });
 }
 
 function parseTemplateFromFormData(formData: FormData) {
@@ -52,7 +44,6 @@ function parseTemplateFromFormData(formData: FormData) {
     periodicity: formData.get("periodicity"),
     competenciaOffsetMonths: formData.get("competenciaOffsetMonths") || 0,
     metaDeadlineOffsetDays: formData.get("metaDeadlineOffsetDays") || 0,
-    businessDayAdjustment: formData.get("businessDayAdjustment") || "POSTPONE",
     geraMulta: formData.get("geraMulta") === "on",
     active: formData.get("active") === "on",
   });
@@ -68,7 +59,8 @@ export async function createTaskTemplate(
 
   try {
     const data = parseTemplateFromFormData(formData);
-    const legalDeadlineRule = parseRuleFromFormData(formData);
+    const legalDeadlineRule = parseRuleFromFormData(formData, data.competenciaOffsetMonths);
+    const businessDayAdjustment = formData.get("postergar") === "on" ? "POSTPONE" : "NONE";
 
     await prisma.taskTemplate.create({
       data: {
@@ -78,7 +70,7 @@ export async function createTaskTemplate(
         legalDeadlineRule,
         competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
-        businessDayAdjustment: data.businessDayAdjustment,
+        businessDayAdjustment,
         geraMulta: data.geraMulta,
         active: data.active,
       },
@@ -99,7 +91,8 @@ export async function updateTaskTemplate(
 
   try {
     const data = parseTemplateFromFormData(formData);
-    const legalDeadlineRule = parseRuleFromFormData(formData);
+    const legalDeadlineRule = parseRuleFromFormData(formData, data.competenciaOffsetMonths);
+    const businessDayAdjustment = formData.get("postergar") === "on" ? "POSTPONE" : "NONE";
 
     await prisma.taskTemplate.update({
       where: { id: templateId },
@@ -110,7 +103,7 @@ export async function updateTaskTemplate(
         legalDeadlineRule,
         competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
-        businessDayAdjustment: data.businessDayAdjustment,
+        businessDayAdjustment,
         geraMulta: data.geraMulta,
         active: data.active,
       },
