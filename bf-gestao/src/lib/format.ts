@@ -15,12 +15,9 @@ export function formatDocument(client: { personType: string; cnpj?: string | nul
 }
 
 export function expiryStatus(dataValidade: string | Date) {
-  const days = Math.ceil((new Date(dataValidade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (days < 0) {
-    return { label: `Vencido há ${Math.abs(days)}d`, className: "bg-[#F6DFDB] text-[#B3453A]" };
+  const isExpired = new Date(dataValidade).getTime() < Date.now();
+  if (isExpired) {
+    return { label: "Vencido", className: "bg-[#F6DFDB] text-[#B3453A]" };
   }
-  if (days <= 30) {
-    return { label: `Vence em ${days}d`, className: "bg-[#F5E7D3] text-[#B4762A]" };
-  }
-  return { label: `Vence em ${days}d`, className: "bg-[#E5EEE1] text-[#4C7A46]" };
+  return { label: "Vigente", className: "bg-[#E5EEE1] text-[#4C7A46]" };
 }
