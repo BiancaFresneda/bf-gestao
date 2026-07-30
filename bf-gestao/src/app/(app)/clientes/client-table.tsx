@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatDocument } from "@/lib/format";
+import { ColumnFilterHeader } from "./column-filter-header";
 
 type ClientRow = {
   id: string;
@@ -17,44 +18,103 @@ type ClientRow = {
   status: string;
 };
 
+const COLUMNS = ["nome", "documento", "tipo", "regime", "cidade", "status"] as const;
+type Column = (typeof COLUMNS)[number];
+
+function columnValue(client: ClientRow, column: Column): string {
+  switch (column) {
+    case "nome":
+      return client.name;
+    case "documento":
+      return formatDocument(client);
+    case "tipo":
+      return client.tipoAtividade ?? "—";
+    case "regime":
+      return client.taxRegime ?? "—";
+    case "cidade":
+      return client.municipio ? `${client.municipio}/${client.uf}` : "—";
+    case "status":
+      return client.status;
+  }
+}
+
 export function ClientTable({ clients }: { clients: ClientRow[] }) {
   const [search, setSearch] = useState("");
-  const [ufFilter, setUfFilter] = useState("");
   const [personTypeFilter, setPersonTypeFilter] = useState<"all" | "PJ" | "PF">("all");
+  const [columnFilters, setColumnFilters] = useState<Record<Column, Set<string>>>({
+    nome: new Set(),
+    documento: new Set(),
+    tipo: new Set(),
+    regime: new Set(),
+    cidade: new Set(),
+    status: new Set(),
+  });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const ufs = useMemo(
-    () => Array.from(new Set(clients.map((c) => c.uf).filter(Boolean))).sort() as string[],
-    [clients],
-  );
+  const columnOptions = useMemo(() => {
+    const options: Record<Column, string[]> = {
+      nome: [],
+      documento: [],
+      tipo: [],
+      regime: [],
+      cidade: [],
+      status: [],
+    };
+    for (const column of COLUMNS) {
+      options[column] = Array.from(new Set(clients.map((c) => columnValue(c, column)))).sort();
+    }
+    return options;
+  }, [clients]);
 
   const filtered = clients.filter((client) => {
     if (search && !client.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (ufFilter && client.uf !== ufFilter) return false;
     if (personTypeFilter !== "all" && client.personType !== personTypeFilter) return false;
+    for (const column of COLUMNS) {
+      const selected = columnFilters[column];
+      if (selected.size > 0 && !selected.has(columnValue(client, column))) return false;
+    }
     return true;
   });
 
+  const allVisibleSelected = filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id));
+
+  function updateColumnFilter(column: Column, next: Set<string>) {
+    setColumnFilters((prev) => ({ ...prev, [column]: next }));
+  }
+
+  function toggleRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        for (const client of filtered) next.delete(client.id);
+      } else {
+        for (const client of filtered) next.add(client.id);
+      }
+      return next;
+    });
+  }
+
   return (
     <div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por nome..."
           className="w-56 rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         />
-        <select
-          value={ufFilter}
-          onChange={(event) => setUfFilter(event.target.value)}
-          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
-        >
-          <option value="">Todos os estados</option>
-          {ufs.map((uf) => (
-            <option key={uf} value={uf}>
-              {uf}
-            </option>
-          ))}
-        </select>
         <select
           value={personTypeFilter}
           onChange={(event) => setPersonTypeFilter(event.target.value as typeof personTypeFilter)}
@@ -65,24 +125,66 @@ export function ClientTable({ clients }: { clients: ClientRow[] }) {
           <option value="PF">Pessoa física</option>
         </select>
         <span className="self-center text-xs text-[#7D7874]">
-          {filtered.length} de {clients.length} clientes
+          {selectedIds.size > 0
+            ? `${selectedIds.size} selecionado(s) · ${filtered.length} de ${clients.length} clientes`
+            : `${filtered.length} de ${clients.length} clientes`}
         </span>
       </div>
 
       <table className="mt-4 w-full text-left text-sm">
         <thead>
           <tr className="text-xs uppercase text-[#7D7874]">
-            <th className="py-2">Nome</th>
-            <th className="py-2">Documento</th>
-            <th className="py-2">Tipo</th>
-            <th className="py-2">Regime</th>
-            <th className="py-2">Cidade/UF</th>
-            <th className="py-2">Status</th>
+            <th className="w-8 py-2">
+              <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} />
+            </th>
+            <ColumnFilterHeader
+              label="Nome"
+              options={columnOptions.nome}
+              selected={columnFilters.nome}
+              onChange={(next) => updateColumnFilter("nome", next)}
+            />
+            <ColumnFilterHeader
+              label="Documento"
+              options={columnOptions.documento}
+              selected={columnFilters.documento}
+              onChange={(next) => updateColumnFilter("documento", next)}
+            />
+            <ColumnFilterHeader
+              label="Tipo"
+              options={columnOptions.tipo}
+              selected={columnFilters.tipo}
+              onChange={(next) => updateColumnFilter("tipo", next)}
+            />
+            <ColumnFilterHeader
+              label="Regime"
+              options={columnOptions.regime}
+              selected={columnFilters.regime}
+              onChange={(next) => updateColumnFilter("regime", next)}
+            />
+            <ColumnFilterHeader
+              label="Cidade/UF"
+              options={columnOptions.cidade}
+              selected={columnFilters.cidade}
+              onChange={(next) => updateColumnFilter("cidade", next)}
+            />
+            <ColumnFilterHeader
+              label="Status"
+              options={columnOptions.status}
+              selected={columnFilters.status}
+              onChange={(next) => updateColumnFilter("status", next)}
+            />
           </tr>
         </thead>
         <tbody className="divide-y divide-[#EFEAE0]">
           {filtered.map((client) => (
             <tr key={client.id}>
+              <td className="py-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(client.id)}
+                  onChange={() => toggleRow(client.id)}
+                />
+              </td>
               <td className="py-2 text-[#24252A]">
                 <Link href={`/clientes/${client.id}`} className="hover:underline">
                   {client.name}
