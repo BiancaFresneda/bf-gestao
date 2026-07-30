@@ -10,13 +10,7 @@ import { extractCertificateExpiry } from "@/lib/certificate";
 
 const CertificadoSchema = z.object({
   tipo: z.enum(["E_CNPJ", "E_CPF", "NFE", "OUTRO"]),
-  dataValidade: z
-    .string()
-    .optional()
-    .refine((v) => !v || !Number.isNaN(new Date(v).getTime()), {
-      error: "Data de vencimento inválida.",
-    }),
-  senha: z.string().optional(),
+  senha: z.string().min(1, { error: "Informe a senha do certificado." }),
 });
 
 export type CertificadoFormState = { error: string; notice?: never } | { notice: string; error?: never } | undefined;
@@ -30,69 +24,48 @@ export async function saveCertificado(
 
   const validated = CertificadoSchema.safeParse({
     tipo: formData.get("tipo"),
-    dataValidade: formData.get("dataValidade") || undefined,
-    senha: formData.get("senha") || undefined,
+    senha: formData.get("senha"),
   });
 
   if (!validated.success) {
     return { error: validated.error.issues[0]?.message ?? "Verifique os dados informados." };
   }
 
-  const { tipo, dataValidade, senha } = validated.data;
+  const { tipo, senha } = validated.data;
   const file = formData.get("arquivo");
 
-  let arquivoUrl: string | undefined;
-  let arquivoNomeOriginal: string | undefined;
-  let fileBuffer: Buffer | undefined;
-
-  if (file instanceof File && file.size > 0) {
-    fileBuffer = Buffer.from(await file.arrayBuffer());
-    const saved = await saveUploadedFile(file, `certificados/${clientId}`);
-    arquivoUrl = saved.storedPath;
-    arquivoNomeOriginal = saved.originalName;
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Envie o arquivo do certificado (.pfx)." };
   }
 
-  let finalExpiry: Date | undefined;
-  let notice: string | undefined;
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-  if (fileBuffer && senha) {
-    try {
-      finalExpiry = extractCertificateExpiry(fileBuffer, senha);
-      notice = `Certificado salvo. Vencimento detectado automaticamente no arquivo: ${finalExpiry.toLocaleDateString("pt-BR")}.`;
-    } catch (error) {
-      if (!dataValidade) {
-        return {
-          error: error instanceof Error ? error.message : "Não foi possível ler a data do certificado.",
-        };
-      }
-    }
+  let expiry: Date;
+  try {
+    expiry = extractCertificateExpiry(fileBuffer, senha);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Não foi possível ler a data do certificado.",
+    };
   }
 
-  if (!finalExpiry) {
-    if (!dataValidade) {
-      return {
-        error:
-          "Informe o arquivo junto com a senha (para detectar o vencimento automaticamente) ou preencha a data de vencimento manualmente.",
-      };
-    }
-    finalExpiry = new Date(dataValidade);
-  }
+  const saved = await saveUploadedFile(file, `certificados/${clientId}`);
 
   await prisma.certificado.create({
     data: {
       clientId,
       tipo,
-      dataValidade: finalExpiry,
-      arquivoUrl,
-      arquivoNomeOriginal,
-      senhaCriptografada: senha ? encryptSecret(senha) : undefined,
+      dataValidade: expiry,
+      arquivoUrl: saved.storedPath,
+      arquivoNomeOriginal: saved.originalName,
+      senhaCriptografada: encryptSecret(senha),
     },
   });
 
   revalidatePath(`/clientes/${clientId}`);
   revalidatePath("/certificados");
 
-  return notice ? { notice } : undefined;
+  return { notice: `Certificado salvo. Vencimento detectado automaticamente no arquivo: ${expiry.toLocaleDateString("pt-BR")}.` };
 }
 
 export async function deleteCertificado(clientId: string, certificadoId: string) {

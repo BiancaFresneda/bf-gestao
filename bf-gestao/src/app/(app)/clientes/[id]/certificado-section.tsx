@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveCertificado, deleteCertificado } from "./certificado-actions";
 import { expiryStatus } from "@/lib/format";
 
@@ -31,14 +31,15 @@ export function CertificadoSection({
   certificados: Certificado[];
 }) {
   const [state, formAction, pending] = useActionState(saveCertificado.bind(null, clientId), undefined);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   return (
     <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
       <h2 className="text-sm font-bold text-[#24252A]">Certificado digital</h2>
       <p className="mt-1 text-xs text-[#7D7874]">
-        Envie o arquivo junto com a senha e o vencimento é lido automaticamente do próprio
-        certificado — só precisa digitar a data se não tiver o arquivo agora. A senha é
-        armazenada criptografada. Cada envio cria um novo registro — o histórico fica preservado.
+        O vencimento é lido automaticamente do próprio certificado ao enviar o arquivo com a
+        senha. A senha é armazenada criptografada. Cada envio cria um novo registro — o
+        histórico fica preservado.
       </p>
 
       {certificados.length > 0 && (
@@ -77,7 +78,7 @@ export function CertificadoSection({
         </ul>
       )}
 
-      <form action={formAction} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
+      <form action={formAction} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <label className={labelClass}>Tipo</label>
           <select name="tipo" defaultValue="E_CNPJ" className={inputClass}>
@@ -88,19 +89,30 @@ export function CertificadoSection({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Arquivo</label>
-          <input type="file" name="arquivo" className={`${inputClass} py-1.5`} />
+          <label className={labelClass}>Arquivo do certificado</label>
+          <label className={`${inputClass} flex cursor-pointer items-center justify-between`}>
+            <span className={fileName ? "text-[#24252A]" : "text-[#7D7874]"}>
+              {fileName ?? "Selecionar arquivo (.pfx)"}
+            </span>
+            <span className="rounded-md bg-[#EFEAE0] px-2 py-1 text-xs font-medium text-[#3D3E40]">
+              Escolher
+            </span>
+            <input
+              type="file"
+              name="arquivo"
+              required
+              accept=".pfx,.p12"
+              className="hidden"
+              onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
+            />
+          </label>
         </div>
         <div>
-          <label className={labelClass}>Senha</label>
-          <input type="password" name="senha" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Vencimento (opcional com arquivo)</label>
-          <input type="date" name="dataValidade" className={inputClass} />
+          <label className={labelClass}>Senha do certificado</label>
+          <input type="password" name="senha" required className={inputClass} />
         </div>
 
-        <div className="sm:col-span-4">
+        <div className="sm:col-span-3">
           {state?.error && <p className="mb-2 text-sm text-red-700">{state.error}</p>}
           {state?.notice && <p className="mb-2 text-sm text-[#4C7A46]">{state.notice}</p>}
           <button
