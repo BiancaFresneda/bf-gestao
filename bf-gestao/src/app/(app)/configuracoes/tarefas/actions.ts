@@ -97,6 +97,8 @@ export async function updateTaskTemplate(
     const legalDeadlineRule = parseRuleFromFormData(formData, data.competenciaOffsetMonths);
     const businessDayAdjustment = formData.get("postergar") === "on" ? "POSTPONE" : "NONE";
 
+    const defaultResponsibleId = data.defaultResponsibleId || null;
+
     await prisma.taskTemplate.update({
       where: { id: templateId },
       data: {
@@ -107,16 +109,25 @@ export async function updateTaskTemplate(
         competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
         businessDayAdjustment,
-        defaultResponsibleId: data.defaultResponsibleId || null,
+        defaultResponsibleId,
         geraMulta: data.geraMulta,
         active: data.active,
       },
+    });
+
+    // Aplica o responsável padrão também às tarefas já geradas por este template —
+    // não só às futuras — para não deixar tarefa antiga sem responsável depois de
+    // definir/trocar o responsável do cadastro.
+    await prisma.task.updateMany({
+      where: { taskTemplateId: templateId },
+      data: { responsibleUserId: defaultResponsibleId },
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Não foi possível salvar a tarefa." };
   }
 
   revalidatePath("/configuracoes/tarefas");
+  revalidatePath("/tarefas");
 }
 
 export async function toggleTaskTemplateActive(templateId: string, active: boolean) {
