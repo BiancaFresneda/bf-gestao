@@ -1,0 +1,695 @@
+[
+  {
+    "name": "Verificar os certificados digitais",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "WEEKLY",
+    "geraMulta": false
+  },
+  {
+    "name": "REST",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "RELATÓRIO DE TAREFA",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento SN",
+    "department": "Fiscal",
+    "metaOffsetDays": -10,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento SEFAZ GO",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Parcelamento Relp SN RFB",
+    "department": "Fiscal",
+    "metaOffsetDays": -15,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento Relp SN PGFN",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento PGFN",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento PGFN",
+    "department": "Fiscal",
+    "metaOffsetDays": -20,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento MEI",
+    "department": "Fiscal",
+    "metaOffsetDays": -15,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Parcelamento ISS",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "MUDAR ALÍQUOTA NA NIBO",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "MIT - Módulo de Inclusão de Tributos",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Informe de Rendimentos",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "ISS Retido - Serviços Tomados",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "ISS - Serviços Prestados",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Honorários fechamento de balanço",
+    "department": "Financeiro",
+    "metaOffsetDays": 0,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Honorários dia 30",
+    "department": "Financeiro",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Honorários",
+    "department": "Legal",
+    "metaOffsetDays": -8,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Guia do IR e CSLL Lucro Real - Trimestral",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "QUARTERLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia do IR e CSLL Lucro Real - Mensal",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia de IRPJ e CSLL Lucro Presumido Mensal",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Guia de ICMS Substituição Tributária",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia de ICMS Normal GO",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia de ICMS Normal DF",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia Protege Adicional 2%",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia IR e CSLL Lucro Presumido",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "QUARTERLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Guia ICMS ST - EQUATORIAL",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "GPS Contribuição Individual",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Folha de Pró-Labore",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Folha de Pagamento (Dia 30)",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Folha de Pagamento (5º Dia Útil)",
+    "department": "Legal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Folha Doméstico",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "FGTS Digital",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Eventos Periódicos eSocial",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Envio XML Pantanal Shopping",
+    "department": "Fiscal",
+    "metaOffsetDays": -2,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Entrega de Balanço",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Emitir nota fiscal Cliente",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Emissão do DRE",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Emissão de NF - Cliente",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Emissão de Fatura Municipal - Cliente",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Emissão de Fatura Estadual - Cliente",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "EMITIR BOLETO NOTA CONTROL",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "EFD ICMS IPI",
+    "department": "Fiscal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "EFD Contribuições",
+    "department": "Fiscal",
+    "metaOffsetDays": -2,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "EFD - Reinf",
+    "department": "Fiscal",
+    "metaOffsetDays": -2,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "ECF - Escrituração Contábil Fiscal",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "ECD - Escrituração Contábil Digital",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Declaração Mensal de Serviços (DMS)",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Declaração Anual_MEI",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Declaração Anual - MEI",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DMED",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DITR - Declaração do Imposto sobre a Propriedade Territorial Rural",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DIRF Anual Recibo",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DIMOB",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DIME SC",
+    "department": "Fiscal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DIFERENCIAL DE ALÍQUOTA SN - Estado de Roraima",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DIFERENCIAL DE ALÍQUOTA SN - Estado de Goiás",
+    "department": "Fiscal",
+    "metaOffsetDays": -15,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DIFERENCIAL DE ALÍQUOTA SN - Demais estados",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DESTDA",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DEFIS - Simples Nacional",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DCTFWEB sem movimento",
+    "department": "Legal",
+    "metaOffsetDays": -5,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DCTF Web 13° Salario",
+    "department": "Legal",
+    "metaOffsetDays": -1,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DCTF Web",
+    "department": "Legal",
+    "metaOffsetDays": -5,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DAS_Enviar guia pelo whats",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DAS PARCELAMENTO MEI - INC 3",
+    "department": "Fiscal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "DAS - Salão Parceiro",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DAS - MEI",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DAS",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF PIS/COFINS Presumido",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF PIS/COFINS - Não Cumulativo",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF IRRF PJ",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF IRRF PF (Aluguel)",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF IPI",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DARF CRF",
+    "department": "Fiscal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DAE Doméstico (13º Salário)",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "DAE Doméstico",
+    "department": "Legal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Contribuição Sindical Empregados",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Contribuição Assistencial Empregados",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Consultar FGTS em aberto",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Consultar DCTFWEB em aberto",
+    "department": "Legal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Consultar DAS em aberto",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Consulta Alíquota de FAP",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Cobrança de Extratos bancários e documentos",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Cadastro e Atualização no CNES",
+    "department": "Legal",
+    "metaOffsetDays": -5,
+    "periodicity": "SEMESTER",
+    "geraMulta": false
+  },
+  {
+    "name": "CONSULTAR EMPRÉSTIMOS DO TRABALHADOR",
+    "department": "Legal",
+    "metaOffsetDays": -1,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "CONSULTAR EMPRÉSTIMOS CONSIGNADO",
+    "department": "Legal",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete Mensal/trimestral  - Para empresas com pouco movimento",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "QUARTERLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete - Anual",
+    "department": "Contábil",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 30",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 27",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 25",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 20",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 10",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Balancete  Mensal  - Dia 07",
+    "department": "Contábil",
+    "metaOffsetDays": 0,
+    "periodicity": "MONTHLY",
+    "geraMulta": false
+  },
+  {
+    "name": "Autenticação Livro Inventário",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "Autenticação Livro Entradas",
+    "department": "Fiscal",
+    "metaOffsetDays": -5,
+    "periodicity": "YEARLY",
+    "geraMulta": true
+  },
+  {
+    "name": "13º Salário Integral",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  },
+  {
+    "name": "13º Salário Adiantamento",
+    "department": "Legal",
+    "metaOffsetDays": -3,
+    "periodicity": "YEARLY",
+    "geraMulta": false
+  }
+]
