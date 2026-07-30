@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -23,7 +24,16 @@ export default async function ClientEditPage({
   return (
     <div className="space-y-6 p-8">
       <div>
-        <h1 className="text-2xl font-bold text-[#24252A]">{client.name}</h1>
+        <Link
+          href="/clientes"
+          className="inline-flex items-center gap-1.5 text-sm text-[#7D7874] hover:text-[#3D3E40]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Voltar para Clientes
+        </Link>
+        <h1 className="mt-2 text-2xl font-bold text-[#24252A]">{client.name}</h1>
         <p className="mt-1 text-sm text-[#7D7874]">
           {client.cnpj ?? client.cpf} · {client.municipio ? `${client.municipio}/${client.uf}` : "Endereço não cadastrado"}
         </p>
