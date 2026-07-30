@@ -2,6 +2,7 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { DepartmentForm } from "./department-form";
 import { UserForm } from "./user-form";
+import { SettingsTabs } from "./settings-tabs";
 import { deleteDepartment, toggleUserActive } from "./actions";
 
 export default async function ConfiguracoesPage() {
@@ -34,6 +35,8 @@ export default async function ConfiguracoesPage() {
           Gerencie os departamentos e usuários da equipe.
         </p>
       </div>
+
+      <SettingsTabs active="/configuracoes" />
 
       <section className="rounded-xl border border-stone-200 bg-white p-6">
         <h2 className="text-lg font-medium text-stone-900">Departamentos</h2>
