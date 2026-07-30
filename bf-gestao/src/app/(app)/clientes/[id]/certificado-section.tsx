@@ -36,8 +36,9 @@ export function CertificadoSection({
     <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
       <h2 className="text-sm font-bold text-[#24252A]">Certificado digital</h2>
       <p className="mt-1 text-xs text-[#7D7874]">
-        A senha é armazenada de forma criptografada. Cada envio cria um novo registro — o
-        histórico de certificados anteriores fica preservado.
+        Envie o arquivo junto com a senha e o vencimento é lido automaticamente do próprio
+        certificado — só precisa digitar a data se não tiver o arquivo agora. A senha é
+        armazenada criptografada. Cada envio cria um novo registro — o histórico fica preservado.
       </p>
 
       {certificados.length > 0 && (
@@ -95,12 +96,13 @@ export function CertificadoSection({
           <input type="password" name="senha" className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Vencimento</label>
-          <input type="date" name="dataValidade" required className={inputClass} />
+          <label className={labelClass}>Vencimento (opcional com arquivo)</label>
+          <input type="date" name="dataValidade" className={inputClass} />
         </div>
 
         <div className="sm:col-span-4">
           {state?.error && <p className="mb-2 text-sm text-red-700">{state.error}</p>}
+          {state?.notice && <p className="mb-2 text-sm text-[#4C7A46]">{state.notice}</p>}
           <button
             type="submit"
             disabled={pending}

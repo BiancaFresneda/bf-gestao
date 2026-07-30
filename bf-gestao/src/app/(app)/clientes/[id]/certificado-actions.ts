@@ -6,16 +6,20 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { encryptSecret } from "@/lib/crypto";
 import { saveUploadedFile } from "@/lib/file-storage";
+import { extractCertificateExpiry } from "@/lib/certificate";
 
 const CertificadoSchema = z.object({
   tipo: z.enum(["E_CNPJ", "E_CPF", "NFE", "OUTRO"]),
-  dataValidade: z.string().refine((v) => !Number.isNaN(new Date(v).getTime()), {
-    error: "Informe uma data de vencimento válida.",
-  }),
+  dataValidade: z
+    .string()
+    .optional()
+    .refine((v) => !v || !Number.isNaN(new Date(v).getTime()), {
+      error: "Data de vencimento inválida.",
+    }),
   senha: z.string().optional(),
 });
 
-export type CertificadoFormState = { error: string } | undefined;
+export type CertificadoFormState = { error: string; notice?: never } | { notice: string; error?: never } | undefined;
 
 export async function saveCertificado(
   clientId: string,
@@ -26,7 +30,7 @@ export async function saveCertificado(
 
   const validated = CertificadoSchema.safeParse({
     tipo: formData.get("tipo"),
-    dataValidade: formData.get("dataValidade"),
+    dataValidade: formData.get("dataValidade") || undefined,
     senha: formData.get("senha") || undefined,
   });
 
@@ -39,17 +43,46 @@ export async function saveCertificado(
 
   let arquivoUrl: string | undefined;
   let arquivoNomeOriginal: string | undefined;
+  let fileBuffer: Buffer | undefined;
+
   if (file instanceof File && file.size > 0) {
+    fileBuffer = Buffer.from(await file.arrayBuffer());
     const saved = await saveUploadedFile(file, `certificados/${clientId}`);
     arquivoUrl = saved.storedPath;
     arquivoNomeOriginal = saved.originalName;
+  }
+
+  let finalExpiry: Date | undefined;
+  let notice: string | undefined;
+
+  if (fileBuffer && senha) {
+    try {
+      finalExpiry = extractCertificateExpiry(fileBuffer, senha);
+      notice = `Certificado salvo. Vencimento detectado automaticamente no arquivo: ${finalExpiry.toLocaleDateString("pt-BR")}.`;
+    } catch (error) {
+      if (!dataValidade) {
+        return {
+          error: error instanceof Error ? error.message : "Não foi possível ler a data do certificado.",
+        };
+      }
+    }
+  }
+
+  if (!finalExpiry) {
+    if (!dataValidade) {
+      return {
+        error:
+          "Informe o arquivo junto com a senha (para detectar o vencimento automaticamente) ou preencha a data de vencimento manualmente.",
+      };
+    }
+    finalExpiry = new Date(dataValidade);
   }
 
   await prisma.certificado.create({
     data: {
       clientId,
       tipo,
-      dataValidade: new Date(dataValidade),
+      dataValidade: finalExpiry,
       arquivoUrl,
       arquivoNomeOriginal,
       senhaCriptografada: senha ? encryptSecret(senha) : undefined,
@@ -58,6 +91,8 @@ export async function saveCertificado(
 
   revalidatePath(`/clientes/${clientId}`);
   revalidatePath("/certificados");
+
+  return notice ? { notice } : undefined;
 }
 
 export async function deleteCertificado(clientId: string, certificadoId: string) {
