@@ -4,11 +4,7 @@ import { RuleSchema } from "@/app/(app)/configuracoes/tarefas/rule";
 import { competenciaAt, nextCompetencia, type RecurringPeriodicity } from "./competencia";
 import { computeDeadlines } from "./date-rules";
 import { loadHolidaySet } from "./holidays";
-import { addDays, nowInSaoPauloMidnight } from "./dates";
-
-// Janela de antecedência: gera a competência um pouco antes do início dela, para dar
-// tempo de planejamento — sem depender de o cron rodar exatamente no dia certo.
-const LOOKAHEAD_DAYS = 5;
+import { nowInSaoPauloMidnight, shiftMonths } from "./dates";
 
 // Teto de segurança por vínculo cliente+template numa única execução — nunca deveria
 // ser atingido em uso normal (o cron roda várias vezes ao dia), só protege contra bug.
@@ -45,7 +41,6 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
 
     try {
       const referenceDate = nowInSaoPauloMidnight();
-      const limitDate = addDays(referenceDate, LOOKAHEAD_DAYS);
       const holidays = await loadHolidaySet();
 
       const links = await prisma.clientTaskTemplate.findMany({
@@ -75,9 +70,15 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
           ? nextCompetencia(periodicity, lastTask.competenciaInicio)
           : competenciaAt(periodicity, link.vigenciaInicio);
 
+        // Teto explícito por template: em que competência estamos "hoje", deslocada pelo
+        // competenciaOffsetMonths configurado — ex.: DAS gerado em julho aponta pra
+        // competência de junho (offset -1). Nunca um número de dias de antecedência
+        // arbitrário — a regra é sempre a que a Bianca configurou no cadastro da tarefa.
+        const ceiling = competenciaAt(periodicity, shiftMonths(referenceDate, link.taskTemplate.competenciaOffsetMonths));
+
         let iterations = 0;
         while (
-          competencia.inicio.getTime() <= limitDate.getTime() &&
+          competencia.inicio.getTime() <= ceiling.inicio.getTime() &&
           (!link.vigenciaFim || competencia.inicio.getTime() <= link.vigenciaFim.getTime()) &&
           iterations < MAX_ITEMS_PER_LINK
         ) {

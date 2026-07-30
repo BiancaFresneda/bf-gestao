@@ -10,9 +10,9 @@ type ExistingTemplate = {
   id: string;
   name: string;
   departmentId: string;
-  module: string | null;
   periodicity: string;
   legalDeadlineRule: unknown;
+  competenciaOffsetMonths: number;
   metaDeadlineOffsetDays: number;
   businessDayAdjustment: string;
   geraMulta: boolean;
@@ -28,34 +28,28 @@ const PERIODICITY_OPTIONS = [
   { value: "PONTUAL", label: "Pontual" },
 ];
 
-const MODULE_OPTIONS = [
-  { value: "", label: "Sem módulo específico" },
-  { value: "FISCAL", label: "Fiscal" },
-  { value: "PESSOAL", label: "Pessoal" },
-  { value: "CONTABIL", label: "Contábil" },
-  { value: "SOCIETARIO", label: "Societário" },
-  { value: "FINANCEIRO", label: "Financeiro" },
-  { value: "LEGAL", label: "Legal" },
-];
-
 const ADJUSTMENT_OPTIONS = [
   { value: "POSTPONE", label: "Adiar para o próximo dia útil" },
   { value: "ANTECIPATE", label: "Antecipar para o dia útil anterior" },
   { value: "NONE", label: "Não ajustar" },
 ];
 
-const RULE_TYPE_OPTIONS = [
+const RULE_MODE_OPTIONS = [
   { value: "unset", label: "A definir depois" },
-  { value: "dayOfMonth", label: "Dia fixo do mês" },
-  { value: "lastBusinessDay", label: "Último dia útil do mês" },
-  { value: "nthBusinessDay", label: "Enésimo dia útil do mês" },
+  { value: "fixedDay", label: "Dia fixo do mês" },
+  { value: "businessDay", label: "Dia útil" },
 ];
 
-function ruleTypeOf(rule: unknown): string {
-  if (rule && typeof rule === "object" && "type" in rule) {
-    return String((rule as Rule).type);
-  }
+function ruleModeOf(rule: unknown): string {
+  const type = rule && typeof rule === "object" && "type" in rule ? String((rule as Rule).type) : "unset";
+  if (type === "dayOfMonth") return "fixedDay";
+  if (type === "lastBusinessDay" || type === "nthBusinessDay") return "businessDay";
   return "unset";
+}
+
+function ruleCountModeOf(rule: unknown): "nth" | "last" {
+  const type = rule && typeof rule === "object" && "type" in rule ? String((rule as Rule).type) : "";
+  return type === "lastBusinessDay" ? "last" : "nth";
 }
 
 function ruleFieldOf(rule: unknown, field: "day" | "monthOffset" | "n"): string {
@@ -75,7 +69,8 @@ export function TaskTemplateForm({
   action: (state: TaskTemplateFormState, formData: FormData) => Promise<TaskTemplateFormState>;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [ruleType, setRuleType] = useState(ruleTypeOf(template?.legalDeadlineRule));
+  const [ruleMode, setRuleMode] = useState(ruleModeOf(template?.legalDeadlineRule));
+  const [ruleCountMode, setRuleCountMode] = useState<"nth" | "last">(ruleCountModeOf(template?.legalDeadlineRule));
 
   return (
     <form action={formAction} className="space-y-4">
@@ -110,21 +105,6 @@ export function TaskTemplateForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-stone-600">Módulo</label>
-          <select
-            name="module"
-            defaultValue={template?.module ?? ""}
-            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
-          >
-            {MODULE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
           <label className="block text-xs font-medium text-stone-600">Periodicidade</label>
           <select
             name="periodicity"
@@ -141,17 +121,37 @@ export function TaskTemplateForm({
       </div>
 
       <fieldset className="rounded-lg border border-stone-200 p-3">
+        <legend className="px-1 text-xs font-medium text-stone-600">Competência</legend>
+        <div className="max-w-xs">
+          <label className="block text-xs text-stone-500">
+            Deslocamento em meses a partir do mês atual
+          </label>
+          <input
+            name="competenciaOffsetMonths"
+            type="number"
+            step={1}
+            defaultValue={template?.competenciaOffsetMonths ?? 0}
+            required
+            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+          />
+          <p className="mt-1 text-xs text-stone-400">
+            Ex.: -1 = ao gerar em julho, a competência é junho. 0 = competência é o próprio mês atual.
+          </p>
+        </div>
+      </fieldset>
+
+      <fieldset className="rounded-lg border border-stone-200 p-3">
         <legend className="px-1 text-xs font-medium text-stone-600">Prazo legal</legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label className="block text-xs text-stone-500">Regra</label>
             <select
-              name="ruleType"
-              value={ruleType}
-              onChange={(event) => setRuleType(event.target.value)}
+              name="ruleMode"
+              value={ruleMode}
+              onChange={(event) => setRuleMode(event.target.value)}
               className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
             >
-              {RULE_TYPE_OPTIONS.map((option) => (
+              {RULE_MODE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -159,7 +159,7 @@ export function TaskTemplateForm({
             </select>
           </div>
 
-          {ruleType === "dayOfMonth" && (
+          {ruleMode === "fixedDay" && (
             <div>
               <label className="block text-xs text-stone-500">Dia do mês</label>
               <input
@@ -174,9 +174,24 @@ export function TaskTemplateForm({
             </div>
           )}
 
-          {ruleType === "nthBusinessDay" && (
+          {ruleMode === "businessDay" && (
             <div>
-              <label className="block text-xs text-stone-500">Enésimo dia útil</label>
+              <label className="block text-xs text-stone-500">Contagem</label>
+              <select
+                name="ruleCountMode"
+                value={ruleCountMode}
+                onChange={(event) => setRuleCountMode(event.target.value as "nth" | "last")}
+                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+              >
+                <option value="nth">Enésimo dia útil</option>
+                <option value="last">Último dia útil do mês</option>
+              </select>
+            </div>
+          )}
+
+          {ruleMode === "businessDay" && ruleCountMode === "nth" && (
+            <div>
+              <label className="block text-xs text-stone-500">Qual dia útil</label>
               <input
                 name="ruleN"
                 type="number"
@@ -189,19 +204,24 @@ export function TaskTemplateForm({
             </div>
           )}
 
-          {(ruleType === "dayOfMonth" || ruleType === "lastBusinessDay" || ruleType === "nthBusinessDay") && (
-            <div>
-              <label className="block text-xs text-stone-500">Mês de referência</label>
+          {(ruleMode === "fixedDay" || ruleMode === "businessDay") && (
+            <div className="sm:col-span-3">
+              <label className="block text-xs text-stone-500">Quantos meses após a competência</label>
               <select
                 name="ruleMonthOffset"
                 defaultValue={ruleFieldOf(template?.legalDeadlineRule, "monthOffset")}
-                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                className="mt-1 w-full max-w-xs rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
               >
                 <option value="0">Mesmo mês da competência</option>
-                <option value="1">Mês seguinte</option>
+                <option value="1">1 mês depois</option>
                 <option value="2">2 meses depois</option>
                 <option value="3">3 meses depois</option>
               </select>
+              <p className="mt-1 text-xs text-stone-400">
+                Ex.: DAS da competência de junho vence em julho → escolha &quot;1 mês depois&quot;.
+                Ex.: uma tarefa com o 15º dia útil do 2º mês subsequente → &quot;Dia útil&quot;, 15,
+                &quot;2 meses depois&quot;.
+              </p>
             </div>
           )}
         </div>

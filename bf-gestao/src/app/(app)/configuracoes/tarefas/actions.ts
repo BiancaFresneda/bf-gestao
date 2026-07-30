@@ -15,40 +15,32 @@ async function requireAdmin() {
 
 const PERIODICITIES = ["WEEKLY", "MONTHLY", "QUARTERLY", "SEMESTER", "YEARLY", "PONTUAL"] as const;
 const ADJUSTMENTS = ["NONE", "ANTECIPATE", "POSTPONE"] as const;
-const MODULES = ["FISCAL", "PESSOAL", "CONTABIL", "SOCIETARIO", "FINANCEIRO", "LEGAL"] as const;
 
 const TaskTemplateSchema = z.object({
   name: z.string().trim().min(2, { error: "Informe o nome da tarefa." }),
   departmentId: z.string().min(1, { error: "Selecione um departamento." }),
-  module: z.enum(MODULES).optional().or(z.literal("")),
   periodicity: z.enum(PERIODICITIES),
+  competenciaOffsetMonths: z.coerce.number().int(),
   metaDeadlineOffsetDays: z.coerce.number().int(),
   businessDayAdjustment: z.enum(ADJUSTMENTS),
   geraMulta: z.coerce.boolean(),
   active: z.coerce.boolean(),
 });
 
+// A UI apresenta a regra como "dia fixo do mês" ou "dia útil" (e, dentro de dia útil,
+// "enésimo" ou "último") — mas o formato salvo no banco (RuleSchema) não muda.
 function parseRuleFromFormData(formData: FormData) {
-  const type = formData.get("ruleType");
-  if (type === "dayOfMonth") {
-    return RuleSchema.parse({
-      type: "dayOfMonth",
-      day: formData.get("ruleDay"),
-      monthOffset: formData.get("ruleMonthOffset") || 0,
-    });
+  const mode = formData.get("ruleMode");
+  const monthOffset = formData.get("ruleMonthOffset") || 0;
+
+  if (mode === "fixedDay") {
+    return RuleSchema.parse({ type: "dayOfMonth", day: formData.get("ruleDay"), monthOffset });
   }
-  if (type === "lastBusinessDay") {
-    return RuleSchema.parse({
-      type: "lastBusinessDay",
-      monthOffset: formData.get("ruleMonthOffset") || 0,
-    });
-  }
-  if (type === "nthBusinessDay") {
-    return RuleSchema.parse({
-      type: "nthBusinessDay",
-      n: formData.get("ruleN"),
-      monthOffset: formData.get("ruleMonthOffset") || 0,
-    });
+  if (mode === "businessDay") {
+    if (formData.get("ruleCountMode") === "last") {
+      return RuleSchema.parse({ type: "lastBusinessDay", monthOffset });
+    }
+    return RuleSchema.parse({ type: "nthBusinessDay", n: formData.get("ruleN"), monthOffset });
   }
   return RuleSchema.parse({ type: "unset" });
 }
@@ -57,8 +49,8 @@ function parseTemplateFromFormData(formData: FormData) {
   return TaskTemplateSchema.parse({
     name: formData.get("name"),
     departmentId: formData.get("departmentId"),
-    module: formData.get("module") || undefined,
     periodicity: formData.get("periodicity"),
+    competenciaOffsetMonths: formData.get("competenciaOffsetMonths") || 0,
     metaDeadlineOffsetDays: formData.get("metaDeadlineOffsetDays") || 0,
     businessDayAdjustment: formData.get("businessDayAdjustment") || "POSTPONE",
     geraMulta: formData.get("geraMulta") === "on",
@@ -82,9 +74,9 @@ export async function createTaskTemplate(
       data: {
         name: data.name,
         departmentId: data.departmentId,
-        module: data.module || null,
         periodicity: data.periodicity,
         legalDeadlineRule,
+        competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
         businessDayAdjustment: data.businessDayAdjustment,
         geraMulta: data.geraMulta,
@@ -114,9 +106,9 @@ export async function updateTaskTemplate(
       data: {
         name: data.name,
         departmentId: data.departmentId,
-        module: data.module || null,
         periodicity: data.periodicity,
         legalDeadlineRule,
+        competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
         businessDayAdjustment: data.businessDayAdjustment,
         geraMulta: data.geraMulta,

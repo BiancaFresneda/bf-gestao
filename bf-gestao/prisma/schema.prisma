@@ -191,10 +191,12 @@ model TaskTemplate {
   id                     String                @id @default(cuid())
   name                   String
   departmentId           String
-  module                 ServiceModule?
   periodicity            Periodicity
   // Regra estruturada (JSON), nunca texto livre — ex.: { "type": "dayOfMonth", "day": 20, "monthOffset": 1 }
   legalDeadlineRule      Json
+  // Deslocamento, em meses, entre o mês em que a tarefa é gerada e o mês da competência
+  // gerada — ex.: DAS gerado em julho aponta pra competência de junho, então -1.
+  competenciaOffsetMonths Int                  @default(0)
   metaDeadlineOffsetDays Int                   @default(0)
   businessDayAdjustment  BusinessDayAdjustment @default(POSTPONE)
   geraMulta              Boolean               @default(false)
