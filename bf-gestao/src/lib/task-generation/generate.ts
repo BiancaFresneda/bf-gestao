@@ -66,15 +66,23 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
           select: { competenciaInicio: true },
         });
 
-        let competencia = lastTask
-          ? nextCompetencia(periodicity, lastTask.competenciaInicio)
-          : competenciaAt(periodicity, link.vigenciaInicio);
-
         // Teto explícito por template: em que competência estamos "hoje", deslocada pelo
         // competenciaOffsetMonths configurado — ex.: DAS gerado em julho aponta pra
         // competência de junho (offset -1). Nunca um número de dias de antecedência
         // arbitrário — a regra é sempre a que a Bianca configurou no cadastro da tarefa.
         const ceiling = competenciaAt(periodicity, shiftMonths(referenceDate, link.taskTemplate.competenciaOffsetMonths));
+
+        let competencia = lastTask
+          ? nextCompetencia(periodicity, lastTask.competenciaInicio)
+          : competenciaAt(periodicity, link.vigenciaInicio);
+
+        // Vínculo novo, sem tarefa anterior: a vigência começa no dia em que o cliente foi
+        // marcado na tela (hoje), mas a competência "hoje" pode já estar à frente do teto
+        // (ex.: competenciaOffsetMonths=-1 faz o teto apontar pro mês passado). Nesse caso
+        // a primeira competência a gerar é o próprio teto, nunca uma posterior a ele.
+        if (!lastTask && competencia.inicio.getTime() > ceiling.inicio.getTime()) {
+          competencia = ceiling;
+        }
 
         let iterations = 0;
         while (
