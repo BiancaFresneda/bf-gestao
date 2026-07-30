@@ -21,6 +21,7 @@ const TaskTemplateSchema = z.object({
   periodicity: z.enum(PERIODICITIES),
   competenciaOffsetMonths: z.coerce.number().int(),
   metaDeadlineOffsetDays: z.coerce.number().int(),
+  defaultResponsibleId: z.string().optional().or(z.literal("")),
   geraMulta: z.coerce.boolean(),
   active: z.coerce.boolean(),
 });
@@ -44,6 +45,7 @@ function parseTemplateFromFormData(formData: FormData) {
     periodicity: formData.get("periodicity"),
     competenciaOffsetMonths: formData.get("competenciaOffsetMonths") || 0,
     metaDeadlineOffsetDays: formData.get("metaDeadlineOffsetDays") || 0,
+    defaultResponsibleId: formData.get("defaultResponsibleId") || undefined,
     geraMulta: formData.get("geraMulta") === "on",
     active: formData.get("active") === "on",
   });
@@ -71,6 +73,7 @@ export async function createTaskTemplate(
         competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
         businessDayAdjustment,
+        defaultResponsibleId: data.defaultResponsibleId || null,
         geraMulta: data.geraMulta,
         active: data.active,
       },
@@ -104,6 +107,7 @@ export async function updateTaskTemplate(
         competenciaOffsetMonths: data.competenciaOffsetMonths,
         metaDeadlineOffsetDays: data.metaDeadlineOffsetDays,
         businessDayAdjustment,
+        defaultResponsibleId: data.defaultResponsibleId || null,
         geraMulta: data.geraMulta,
         active: data.active,
       },

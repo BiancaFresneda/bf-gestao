@@ -44,14 +44,15 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  department           Department?         @relation(fields: [departmentId], references: [id])
-  clientResponsibles   ClientResponsible[]
-  assignedTasks        Task[]              @relation("TaskResponsible")
-  completedTasks       Task[]              @relation("TaskCompletedBy")
-  taskHistoryEntries   TaskHistory[]
-  certidoesResponsible Certidao[]
-  certificados         Certificado[]       @relation("CertificadoOwner")
-  certificadosResp     Certificado[]       @relation("CertificadoResponsible")
+  department               Department?         @relation(fields: [departmentId], references: [id])
+  clientResponsibles       ClientResponsible[]
+  assignedTasks            Task[]              @relation("TaskResponsible")
+  completedTasks           Task[]              @relation("TaskCompletedBy")
+  taskHistoryEntries       TaskHistory[]
+  certidoesResponsible     Certidao[]
+  certificados             Certificado[]       @relation("CertificadoOwner")
+  certificadosResp         Certificado[]       @relation("CertificadoResponsible")
+  defaultResponsibleForTemplates TaskTemplate[]
 
   @@map("users")
 }
@@ -201,12 +202,14 @@ model TaskTemplate {
   businessDayAdjustment  BusinessDayAdjustment @default(POSTPONE)
   geraMulta              Boolean               @default(false)
   active                 Boolean               @default(true)
+  defaultResponsibleId   String?
   createdAt              DateTime              @default(now())
 
-  department      Department              @relation(fields: [departmentId], references: [id])
-  clientLinks     ClientTaskTemplate[]
-  tasks           Task[]
-  generationItems TaskGenerationRunItem[]
+  department        Department              @relation(fields: [departmentId], references: [id])
+  defaultResponsible User?                   @relation(fields: [defaultResponsibleId], references: [id])
+  clientLinks        ClientTaskTemplate[]
+  tasks              Task[]
+  generationItems    TaskGenerationRunItem[]
 
   @@map("task_templates")
 }

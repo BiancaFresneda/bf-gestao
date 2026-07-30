@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { TaskTemplateFormState } from "./actions";
 
 type Department = { id: string; name: string };
+type UserOption = { id: string; name: string };
 
 type ExistingTemplate = {
   id: string;
@@ -16,6 +17,7 @@ type ExistingTemplate = {
   businessDayAdjustment: string;
   geraMulta: boolean;
   active: boolean;
+  defaultResponsibleId: string | null;
 };
 
 const PERIODICITY_OPTIONS = [
@@ -43,10 +45,12 @@ const labelClass = "block text-xs font-medium text-stone-600";
 
 export function TaskTemplateForm({
   departments,
+  users,
   template,
   action,
 }: {
   departments: Department[];
+  users: UserOption[];
   template?: ExistingTemplate;
   action: (state: TaskTemplateFormState, formData: FormData) => Promise<TaskTemplateFormState>;
 }) {
@@ -55,7 +59,7 @@ export function TaskTemplateForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className={labelClass}>Nome da tarefa</label>
           <input name="name" defaultValue={template?.name} required className={inputClass} />
@@ -81,6 +85,18 @@ export function TaskTemplateForm({
             {PERIODICITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Responsável</label>
+          <select name="defaultResponsibleId" defaultValue={template?.defaultResponsibleId ?? ""} className={inputClass}>
+            <option value="">Sem responsável definido</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
               </option>
             ))}
           </select>

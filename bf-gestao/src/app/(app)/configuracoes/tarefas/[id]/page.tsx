@@ -14,9 +14,10 @@ export default async function EditarTarefaPage({
   await verifySession();
   const { id } = await params;
 
-  const [template, departments, clients] = await Promise.all([
+  const [template, departments, users, clients] = await Promise.all([
     prisma.taskTemplate.findUnique({ where: { id } }),
     prisma.department.findMany({ orderBy: { name: "asc" } }),
+    prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.client.findMany({
       where: { status: "ATIVO" },
       orderBy: { name: "asc" },
@@ -53,6 +54,7 @@ export default async function EditarTarefaPage({
       <section className="max-w-3xl rounded-xl border border-stone-200 bg-white p-6">
         <TaskTemplateForm
           departments={departments}
+          users={users}
           template={template}
           action={updateTaskTemplate.bind(null, template.id)}
         />
