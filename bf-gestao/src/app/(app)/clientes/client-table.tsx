@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 function formatDoc(client: { personType: string; cnpj: string | null; cpf: string | null }) {
@@ -93,7 +94,11 @@ export function ClientTable({ clients }: { clients: ClientRow[] }) {
         <tbody className="divide-y divide-[#EFEAE0]">
           {filtered.map((client) => (
             <tr key={client.id}>
-              <td className="py-2 text-[#24252A]">{client.name}</td>
+              <td className="py-2 text-[#24252A]">
+                <Link href={`/clientes/${client.id}`} className="hover:underline">
+                  {client.name}
+                </Link>
+              </td>
               <td className="py-2 text-[#7D7874]">{formatDoc(client)}</td>
               <td className="py-2 text-[#7D7874]">{client.tipoAtividade ?? "—"}</td>
               <td className="py-2 text-[#7D7874]">{client.taxRegime ?? "—"}</td>

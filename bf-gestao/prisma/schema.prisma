@@ -83,6 +83,11 @@ model Client {
   status             ClientStatus     @default(ATIVO)
   openingDate        DateTime?
   country            String           @default("BR")
+  cep                String?
+  logradouro         String?
+  numero             String?
+  complemento        String?
+  bairro             String?
   uf                 String?
   municipio          String?
   createdAt          DateTime         @default(now())
@@ -96,8 +101,36 @@ model Client {
   certificados      Certificado[]
   contratos         Contrato[]
   receivables       ClientReceivable[]
+  partners          ClientPartner[]
+  activities        ClientActivity[]
 
   @@map("clients")
+}
+
+model ClientPartner {
+  id               String   @id @default(cuid())
+  clientId         String
+  name             String
+  cpf              String?
+  ownershipPercent Decimal? @db.Decimal(5, 2)
+  qualification    String?
+  createdAt        DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_partners")
+}
+
+model ClientActivity {
+  id          String  @id @default(cuid())
+  clientId    String
+  code        String
+  description String
+  isPrimary   Boolean @default(false)
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("client_activities")
 }
 
 enum ServiceModule {
