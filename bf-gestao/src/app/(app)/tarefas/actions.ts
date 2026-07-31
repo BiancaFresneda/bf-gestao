@@ -43,3 +43,33 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
   revalidatePath("/tarefas");
   revalidatePath("/");
 }
+
+export async function updateTaskResponsible(taskId: string, responsibleUserId: string | null) {
+  await verifySession();
+  await prisma.task.update({ where: { id: taskId }, data: { responsibleUserId } });
+  revalidatePath("/tarefas");
+  revalidatePath("/");
+}
+
+export async function updateTaskNotes(taskId: string, notes: string) {
+  await verifySession();
+  await prisma.task.update({ where: { id: taskId }, data: { notes: notes || null } });
+  revalidatePath("/tarefas");
+}
+
+export async function updateTaskCompletedAt(taskId: string, completedAt: string | null) {
+  await verifySession();
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { completedAt: completedAt ? new Date(`${completedAt}T00:00:00Z`) : null },
+  });
+  revalidatePath("/tarefas");
+  revalidatePath("/");
+}
+
+export async function deleteTask(taskId: string) {
+  await verifySession();
+  await prisma.task.delete({ where: { id: taskId } });
+  revalidatePath("/tarefas");
+  revalidatePath("/");
+}
