@@ -13,14 +13,14 @@ export function DepartmentForm() {
           name="name"
           placeholder="Nome do departamento"
           required
-          className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+          className="w-full rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         />
-        {state?.error && <p className="mt-1 text-xs text-red-600">{state.error}</p>}
+        {state?.error && <p className="mt-1 text-xs text-[#B3453A]">{state.error}</p>}
       </div>
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-stone-800 px-3 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-60"
+        className="rounded-lg bg-[#B4762A] px-3 py-2 text-sm font-medium text-white hover:bg-[#9C6423] disabled:opacity-60"
       >
         {pending ? "Adicionando..." : "Adicionar"}
       </button>

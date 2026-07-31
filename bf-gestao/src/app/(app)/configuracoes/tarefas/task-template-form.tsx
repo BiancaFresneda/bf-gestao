@@ -40,8 +40,8 @@ function ruleDayOf(rule: unknown): string {
 }
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500";
-const labelClass = "block text-xs font-medium text-stone-600";
+  "mt-1 w-full rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]";
+const labelClass = "block text-xs font-medium text-[#7D7874]";
 
 export function TaskTemplateForm({
   departments,
@@ -114,7 +114,7 @@ export function TaskTemplateForm({
               max={31}
               placeholder="Ex.: 20"
               defaultValue={ruleDayOf(template?.legalDeadlineRule)}
-              className="w-24 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+              className="w-24 rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
             />
             <label className="inline-flex cursor-pointer items-center gap-2">
               <input
@@ -124,19 +124,19 @@ export function TaskTemplateForm({
                 onChange={(event) => setPostergar(event.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative h-5 w-9 rounded-full bg-stone-300 transition-colors peer-checked:bg-stone-800">
+              <span className="relative h-5 w-9 rounded-full bg-[#E1DBCC] transition-colors peer-checked:bg-[#B4762A]">
                 <span className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-4" />
               </span>
-              <span className="text-sm text-stone-700">Postergar</span>
+              <span className="text-sm text-[#24252A]">Postergar</span>
             </label>
             <span
               title={POSTERGAR_TOOLTIP}
-              className="flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full bg-stone-200 text-[10px] font-bold text-stone-500"
+              className="flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full bg-[#EFEAE0] text-[10px] font-bold text-[#7D7874]"
             >
               !
             </span>
           </div>
-          <p className="mt-1 text-xs text-stone-400">
+          <p className="mt-1 text-xs text-[#7D7874]">
             Dia do mês em que a tarefa vence. Ex.: 20 = vence todo dia 20.
           </p>
         </div>
@@ -149,16 +149,16 @@ export function TaskTemplateForm({
             defaultValue={template?.metaDeadlineOffsetDays ?? -3}
             className={`${inputClass} max-w-[6rem]`}
           />
-          <p className="mt-1 text-xs text-stone-400">
+          <p className="mt-1 text-xs text-[#7D7874]">
             Dias em relação à data legal. Ex.: -10 = queremos concluir 10 dias antes do vencimento.
           </p>
         </div>
       </div>
 
-      <fieldset className="rounded-lg border border-stone-200 p-3">
-        <legend className="px-1 text-xs font-medium text-stone-600">Competência</legend>
+      <fieldset className="rounded-lg border border-[#E1DBCC] p-3">
+        <legend className="px-1 text-xs font-medium text-[#7D7874]">Competência</legend>
         <div className="max-w-xs">
-          <label className="block text-xs text-stone-500">Deslocamento em meses a partir do mês atual</label>
+          <label className="block text-xs text-[#7D7874]">Deslocamento em meses a partir do mês atual</label>
           <input
             name="competenciaOffsetMonths"
             type="number"
@@ -167,29 +167,29 @@ export function TaskTemplateForm({
             required
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-stone-400">
+          <p className="mt-1 text-xs text-[#7D7874]">
             Ex.: -1 = ao gerar em julho, a competência é junho. 0 = competência é o próprio mês atual.
           </p>
         </div>
       </fieldset>
 
       <div className="flex items-center gap-6">
-        <label className="flex items-center gap-2 text-sm text-stone-700">
+        <label className="flex items-center gap-2 text-sm text-[#24252A]">
           <input type="checkbox" name="geraMulta" defaultChecked={template?.geraMulta} />
           Gera multa se atrasar
         </label>
-        <label className="flex items-center gap-2 text-sm text-stone-700">
+        <label className="flex items-center gap-2 text-sm text-[#24252A]">
           <input type="checkbox" name="active" defaultChecked={template?.active ?? false} />
           Ativa
         </label>
       </div>
 
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state?.error && <p className="text-sm text-[#B3453A]">{state.error}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-60"
+        className="rounded-lg bg-[#B4762A] px-4 py-2 text-sm font-medium text-white hover:bg-[#9C6423] disabled:opacity-60"
       >
         {pending ? "Salvando..." : template ? "Salvar alterações" : "Criar tarefa"}
       </button>

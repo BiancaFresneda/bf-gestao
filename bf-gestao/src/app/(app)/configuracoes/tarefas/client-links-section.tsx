@@ -49,14 +49,14 @@ export function ClientLinksSection({
   }
 
   return (
-    <section className="mt-6 max-w-3xl rounded-xl border border-stone-200 bg-white p-6">
+    <section className="max-w-3xl rounded-xl border border-[#E1DBCC] bg-white p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-stone-900">Clientes vinculados</h2>
-        <span className="text-xs text-stone-500">
+        <h2 className="text-sm font-semibold text-[#24252A]">Clientes vinculados</h2>
+        <span className="text-xs text-[#7D7874]">
           {selected.size} de {clients.length} clientes
         </span>
       </div>
-      <p className="mt-1 text-xs text-stone-500">
+      <p className="mt-1 text-xs text-[#7D7874]">
         Marque os clientes para os quais esta tarefa deve ser gerada automaticamente e clique em
         Salvar.
       </p>
@@ -65,13 +65,13 @@ export function ClientLinksSection({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder="Buscar cliente..."
-        className="mt-3 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+        className="mt-3 w-full rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
       />
 
-      <ul className="mt-3 max-h-80 divide-y divide-stone-100 overflow-y-auto">
+      <ul className="mt-3 max-h-80 divide-y divide-[#EFEAE0] overflow-y-auto">
         {filtered.map((client) => (
           <li key={client.id} className="flex items-center justify-between py-2">
-            <span className="text-sm text-stone-800">{client.name}</span>
+            <span className="text-sm text-[#24252A]">{client.name}</span>
             <input
               type="checkbox"
               checked={selected.has(client.id)}
@@ -80,7 +80,7 @@ export function ClientLinksSection({
           </li>
         ))}
         {filtered.length === 0 && (
-          <li className="py-4 text-center text-sm text-stone-400">Nenhum cliente encontrado.</li>
+          <li className="py-4 text-center text-sm text-[#7D7874]">Nenhum cliente encontrado.</li>
         )}
       </ul>
 
@@ -89,13 +89,13 @@ export function ClientLinksSection({
           type="button"
           onClick={handleSave}
           disabled={isPending || !isDirty}
-          className="rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+          className="rounded-lg bg-[#B4762A] px-4 py-2 text-sm font-medium text-white hover:bg-[#9C6423] disabled:opacity-50"
         >
           {isPending ? "Salvando..." : "Salvar"}
         </button>
-        {!isPending && savedMessage && <span className="text-xs text-stone-500">{savedMessage}</span>}
+        {!isPending && savedMessage && <span className="text-xs text-[#7D7874]">{savedMessage}</span>}
         {!isPending && isDirty && !savedMessage && (
-          <span className="text-xs text-stone-400">Há alterações não salvas.</span>
+          <span className="text-xs text-[#7D7874]">Há alterações não salvas.</span>
         )}
       </div>
     </section>

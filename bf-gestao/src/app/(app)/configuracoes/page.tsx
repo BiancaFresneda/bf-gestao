@@ -1,9 +1,76 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { verifySession } from "@/lib/dal";
-import { prisma } from "@/lib/prisma";
-import { DepartmentForm } from "./department-form";
-import { UserForm } from "./user-form";
-import { SettingsTabs } from "./settings-tabs";
-import { deleteDepartment, toggleUserActive } from "./actions";
+import { ModuleHeader } from "@/components/module-header";
+
+function ChecklistIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+    </svg>
+  );
+}
+
+function ModulesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+      <path d="M4.5 7.5 12 12l7.5-4.5M12 12v9" />
+    </svg>
+  );
+}
+
+function TeamIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" />
+      <path d="M16 8.5c1.4.3 2.5 1.5 2.5 3.2 0 1.4-.7 2.4-1.7 3M17 14.4c2 .4 3.5 1.9 3.5 4.6" />
+    </svg>
+  );
+}
+
+const CARDS = [
+  {
+    href: "/configuracoes/tarefas",
+    icon: <ChecklistIcon />,
+    title: "Tarefas Recorrentes",
+    description: "Cadastre e configure as tarefas recorrentes que serão geradas automaticamente para os clientes.",
+  },
+  {
+    href: "/configuracoes/modulos",
+    icon: <ModulesIcon />,
+    title: "Módulos",
+    description: "Defina os módulos/serviços oferecidos pelo escritório (Fiscal, Contábil, BPO, etc.) usados no cadastro do cliente.",
+  },
+  {
+    href: "/configuracoes/colaboradores",
+    icon: <TeamIcon />,
+    title: "Colaboradores",
+    description: "Gerencie a equipe e os níveis de acesso (admin, gestor, colaborador). Novos cadastros entram automaticamente.",
+  },
+] as const;
+
+function ModuleCard({ href, icon, title, description }: { href: string; icon: ReactNode; title: string; description: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-start gap-4 rounded-xl border border-[#E1DBCC] bg-white p-5 transition hover:border-[#959D90] hover:shadow-sm"
+    >
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#EFEAE0] text-[#7D7874]">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-semibold text-[#24252A]">{title}</h2>
+        <p className="mt-1 text-sm text-[#7D7874]">{description}</p>
+      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="mt-1 h-4 w-4 flex-shrink-0 text-[#B3AFA2]">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+    </Link>
+  );
+}
 
 export default async function ConfiguracoesPage() {
   const session = await verifySession();
@@ -11,102 +78,21 @@ export default async function ConfiguracoesPage() {
   if (session.role !== "ADMIN") {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-semibold text-stone-900">Configurações</h1>
-        <p className="mt-2 text-sm text-stone-500">
-          Apenas administradores podem acessar esta página.
-        </p>
+        <h1 className="text-2xl font-bold text-[#24252A]">Configurações</h1>
+        <p className="mt-2 text-sm text-[#7D7874]">Apenas administradores podem acessar esta página.</p>
       </div>
     );
   }
 
-  const [departments, users] = await Promise.all([
-    prisma.department.findMany({ orderBy: { name: "asc" } }),
-    prisma.user.findMany({
-      orderBy: { name: "asc" },
-      include: { department: true },
-    }),
-  ]);
-
   return (
-    <div className="space-y-10 p-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-stone-900">Configurações</h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Gerencie os departamentos e usuários da equipe.
-        </p>
+    <div>
+      <ModuleHeader title="Configurações" subtitle="Templates, módulos, colaboradores e ajustes do sistema." />
+
+      <div className="grid grid-cols-1 gap-4 p-8 sm:grid-cols-2">
+        {CARDS.map((card) => (
+          <ModuleCard key={card.href} {...card} />
+        ))}
       </div>
-
-      <SettingsTabs active="/configuracoes" />
-
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="text-lg font-medium text-stone-900">Departamentos</h2>
-        <div className="mt-4 max-w-md">
-          <DepartmentForm />
-        </div>
-
-        <ul className="mt-6 divide-y divide-stone-100">
-          {departments.map((department) => (
-            <li key={department.id} className="flex items-center justify-between py-2">
-              <span className="text-sm text-stone-700">{department.name}</span>
-              <form action={deleteDepartment.bind(null, department.id)}>
-                <button type="submit" className="text-xs text-stone-400 hover:text-red-600">
-                  Remover
-                </button>
-              </form>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="text-lg font-medium text-stone-900">Usuários</h2>
-        <div className="mt-4">
-          <UserForm departments={departments} />
-        </div>
-
-        <table className="mt-6 w-full text-left text-sm">
-          <thead>
-            <tr className="text-xs uppercase text-stone-400">
-              <th className="py-2">Nome</th>
-              <th className="py-2">E-mail</th>
-              <th className="py-2">Departamento</th>
-              <th className="py-2">Papel</th>
-              <th className="py-2">Status</th>
-              <th className="py-2" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="py-2 text-stone-800">{user.name}</td>
-                <td className="py-2 text-stone-500">{user.email}</td>
-                <td className="py-2 text-stone-500">{user.department?.name ?? "—"}</td>
-                <td className="py-2 text-stone-500">
-                  {user.role === "ADMIN" ? "Admin" : "Colaborador"}
-                </td>
-                <td className="py-2">
-                  <span
-                    className={
-                      user.active
-                        ? "rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700"
-                        : "rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500"
-                    }
-                  >
-                    {user.active ? "Ativo" : "Inativo"}
-                  </span>
-                </td>
-                <td className="py-2 text-right">
-                  <form action={toggleUserActive.bind(null, user.id, !user.active)}>
-                    <button type="submit" className="text-xs text-stone-400 hover:text-stone-700">
-                      {user.active ? "Desativar" : "Ativar"}
-                    </button>
-                  </form>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
     </div>
   );
 }

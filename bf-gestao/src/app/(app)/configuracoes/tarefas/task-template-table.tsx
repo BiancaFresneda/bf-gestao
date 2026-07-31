@@ -50,12 +50,12 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por nome..."
-          className="w-56 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+          className="w-56 rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         />
         <select
           value={departmentFilter}
           onChange={(event) => setDepartmentFilter(event.target.value)}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         >
           <option value="">Todos os departamentos</option>
           {departments.map((name) => (
@@ -67,20 +67,20 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-          className="rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-500"
+          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         >
           <option value="all">Ativas e inativas</option>
           <option value="active">Só ativas</option>
           <option value="inactive">Só inativas</option>
         </select>
-        <span className="self-center text-xs text-stone-400">
+        <span className="self-center text-xs text-[#7D7874]">
           {filtered.length} de {templates.length} tarefas
         </span>
       </div>
 
       <table className="mt-4 w-full text-left text-sm">
         <thead>
-          <tr className="text-xs uppercase text-stone-400">
+          <tr className="text-xs uppercase text-[#7D7874]">
             <th className="py-2">Nome</th>
             <th className="py-2">Departamento</th>
             <th className="py-2">Periodicidade</th>
@@ -91,27 +91,27 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
             <th className="py-2" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-100">
+        <tbody className="divide-y divide-[#EFEAE0]">
           {filtered.map((template) => (
             <tr key={template.id}>
-              <td className="py-2 text-stone-800">
+              <td className="py-2 text-[#24252A]">
                 <Link href={`/configuracoes/tarefas/${template.id}`} className="hover:underline">
                   {template.name}
                 </Link>
               </td>
-              <td className="py-2 text-stone-500">{template.department.name}</td>
-              <td className="py-2 text-stone-500">
+              <td className="py-2 text-[#7D7874]">{template.department.name}</td>
+              <td className="py-2 text-[#7D7874]">
                 {PERIODICITY_LABEL[template.periodicity] ?? template.periodicity}
               </td>
-              <td className="py-2 text-stone-500">{describeRule(template.legalDeadlineRule)}</td>
-              <td className="py-2 text-stone-500">{template.metaDeadlineOffsetDays}d</td>
-              <td className="py-2 text-stone-500">{template.geraMulta ? "Sim" : "—"}</td>
+              <td className="py-2 text-[#7D7874]">{describeRule(template.legalDeadlineRule)}</td>
+              <td className="py-2 text-[#7D7874]">{template.metaDeadlineOffsetDays}d</td>
+              <td className="py-2 text-[#7D7874]">{template.geraMulta ? "Sim" : "—"}</td>
               <td className="py-2">
                 <span
                   className={
                     template.active
-                      ? "rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700"
-                      : "rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500"
+                      ? "rounded-full bg-[#E5EEE1] px-2 py-0.5 text-xs text-[#4C7A46]"
+                      : "rounded-full bg-[#EFEAE0] px-2 py-0.5 text-xs text-[#7D7874]"
                   }
                 >
                   {template.active ? "Ativa" : "Inativa"}
@@ -120,7 +120,7 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
               <td className="py-2 text-right">
                 <button
                   onClick={() => toggleTaskTemplateActive(template.id, !template.active)}
-                  className="text-xs text-stone-400 hover:text-stone-700"
+                  className="text-xs text-[#7D7874] hover:text-[#24252A]"
                 >
                   {template.active ? "Desativar" : "Ativar"}
                 </button>

@@ -31,7 +31,7 @@ export async function createDepartment(_prevState: unknown, formData: FormData) 
     return { error: "Já existe um departamento com esse nome." };
   }
 
-  revalidatePath("/configuracoes");
+  revalidatePath("/configuracoes/colaboradores");
 }
 
 export async function deleteDepartment(departmentId: string) {
@@ -45,7 +45,7 @@ export async function deleteDepartment(departmentId: string) {
     );
   }
 
-  revalidatePath("/configuracoes");
+  revalidatePath("/configuracoes/colaboradores");
 }
 
 const UserSchema = z.object({
@@ -82,11 +82,11 @@ export async function createUser(_prevState: unknown, formData: FormData) {
     return { error: "Já existe um usuário com esse e-mail." };
   }
 
-  revalidatePath("/configuracoes");
+  revalidatePath("/configuracoes/colaboradores");
 }
 
 export async function toggleUserActive(userId: string, active: boolean) {
   await requireAdmin();
   await prisma.user.update({ where: { id: userId }, data: { active } });
-  revalidatePath("/configuracoes");
+  revalidatePath("/configuracoes/colaboradores");
 }
