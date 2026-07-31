@@ -1,5 +1,8 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ModuleHeader } from "@/components/module-header";
+import { nowInSaoPauloMidnight, isoDateKey } from "@/lib/task-generation/dates";
+import { DueDateCalendar, type DayCount } from "./due-date-calendar";
+import { BrazilClientsMap } from "./brazil-clients-map";
 
 function StatCard({
   label,
@@ -12,12 +15,13 @@ function StatCard({
   value: string;
   sub?: string;
   icon: React.ReactNode;
-  tone?: "neutral" | "good" | "warn";
+  tone?: "neutral" | "good" | "warn" | "bad";
 }) {
   const toneClasses = {
     neutral: "bg-[#EFEAE0] text-[#3D3E40]",
     good: "bg-[#E5EEE1] text-[#4C7A46]",
     warn: "bg-[#F5E7D3] text-[#B4762A]",
+    bad: "bg-[#F6DFDB] text-[#B3453A]",
   }[tone];
 
   return (
@@ -32,86 +36,149 @@ function StatCard({
   );
 }
 
-export default async function DashboardPage() {
-  const [templateTotal, templateActive, clientTotal, userActive, taskTotal] = await Promise.all([
-    prisma.taskTemplate.count(),
-    prisma.taskTemplate.count({ where: { active: true } }),
-    prisma.client.count(),
-    prisma.user.count({ where: { active: true } }),
-    prisma.task.count(),
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
+  const today = nowInSaoPauloMidnight();
+  const now = new Date();
+  const todayKey = isoDateKey(today);
+
+  const displayMonth = monthParam && /^\d{4}-\d{2}$/.test(monthParam)
+    ? new Date(Date.UTC(Number(monthParam.slice(0, 4)), Number(monthParam.slice(5, 7)) - 1, 1))
+    : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+
+  const currentMonthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+  const currentMonthEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1));
+  const calendarMonthStart = displayMonth;
+  const calendarMonthEnd = new Date(Date.UTC(displayMonth.getUTCFullYear(), displayMonth.getUTCMonth() + 1, 1));
+
+  const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats] = await Promise.all([
+    prisma.task.findMany({
+      where: { prazoLegal: { gte: currentMonthStart, lt: currentMonthEnd } },
+      select: { status: true },
+    }),
+    prisma.task.count({
+      where: { status: { in: ["PENDENTE", "EM_ANDAMENTO"] }, prazoLegal: { lt: now } },
+    }),
+    prisma.task.count({
+      where: {
+        status: { in: ["PENDENTE", "EM_ANDAMENTO"] },
+        prazoLegal: { lt: now },
+        taskTemplate: { geraMulta: true },
+      },
+    }),
+    prisma.task.findMany({
+      where: { prazoLegal: { gte: calendarMonthStart, lt: calendarMonthEnd } },
+      select: { prazoLegal: true, status: true },
+    }),
+    prisma.client.groupBy({ by: ["uf"], where: { status: "ATIVO" }, _count: { _all: true } }),
   ]);
 
+  const tarefasDoMes = tasksThisMonth.length;
+  const emAndamento = tasksThisMonth.filter((t) => t.status === "EM_ANDAMENTO").length;
+  const concluidas = tasksThisMonth.filter((t) => t.status === "CONCLUIDA").length;
+  const percentualConcluidas = tarefasDoMes > 0 ? Math.round((concluidas / tarefasDoMes) * 100) : 0;
+
+  const calendarCounts = new Map<string, DayCount>();
+  for (const task of calendarTasks) {
+    const key = isoDateKey(task.prazoLegal);
+    const entry = calendarCounts.get(key) ?? { total: 0, late: 0 };
+    entry.total += 1;
+    if ((task.status === "PENDENTE" || task.status === "EM_ANDAMENTO") && task.prazoLegal.getTime() < now.getTime()) {
+      entry.late += 1;
+    }
+    calendarCounts.set(key, entry);
+  }
+
+  const countsByUf: Record<string, number> = {};
+  let totalClientesAtivos = 0;
+  for (const row of clientStats) {
+    if (row.uf) countsByUf[row.uf] = row._count._all;
+    totalClientesAtivos += row._count._all;
+  }
+
   return (
-    <div className="space-y-6 p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-[#24252A]">Dashboard</h1>
-        <p className="mt-1 text-sm text-[#7D7874]">
-          Visão geral das obrigações do mês e alertas importantes.
-        </p>
-      </div>
+    <div>
+      <ModuleHeader title="Dashboard" subtitle="Visão geral das obrigações do mês e alertas importantes." />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Templates de tarefa"
-          value={String(templateTotal)}
-          sub={`${templateActive} ativos`}
-          tone={templateActive > 0 ? "good" : "neutral"}
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M9 6h11M9 12h11M9 18h11" />
-              <path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
-            </svg>
-          }
-        />
-        <StatCard
-          label="Clientes cadastrados"
-          value={String(clientTotal)}
-          sub={clientTotal > 0 ? "Cadastro completo chega na Fase 1" : "Nenhum cliente importado ainda"}
-          tone={clientTotal > 0 ? "good" : "neutral"}
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="9" cy="8" r="3.2" />
-              <path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" />
-            </svg>
-          }
-        />
-        <StatCard
-          label="Usuários ativos"
-          value={String(userActive)}
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="8" r="3.2" />
-              <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" />
-            </svg>
-          }
-        />
-        <StatCard
-          label="Tarefas geradas este mês"
-          value={String(taskTotal)}
-          sub="Motor de geração ainda não implementado"
-          tone="warn"
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7v6l4 2" />
-            </svg>
-          }
-        />
-      </div>
+      <div className="space-y-6 p-8">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard
+            label="Tarefas do mês"
+            value={String(tarefasDoMes)}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M9 6h11M9 12h11M9 18h11" />
+                <path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Em andamento"
+            value={String(emAndamento)}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M12 3a9 9 0 1 0 9 9" />
+                <path d="M12 3v4" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Em atraso"
+            value={String(overdueCount)}
+            tone={overdueCount > 0 ? "warn" : "neutral"}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v6l4 2" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Risco de multa"
+            value={String(overdueMultaCount)}
+            tone={overdueMultaCount > 0 ? "bad" : "neutral"}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M12 2 3 6.5v5.7C3 17.1 6.9 21 12 22c5.1-1 9-4.9 9-9.8V6.5L12 2Z" />
+                <path d="M12 8v5M12 16.5v.01" />
+              </svg>
+            }
+          />
+          <StatCard
+            label="Concluídas"
+            value={`${concluidas} (${percentualConcluidas}%)`}
+            tone="good"
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 3 3 5-6" />
+              </svg>
+            }
+          />
+        </div>
 
-      <div className="rounded-xl border border-[#E1DBCC] bg-white p-6">
-        <h2 className="text-sm font-bold text-[#24252A]">Próximo passo: revisar o catálogo de tarefas</h2>
-        <p className="mt-1 text-sm text-[#7D7874]">
-          {templateTotal - templateActive} de {templateTotal} templates importados do sistema
-          anterior ainda estão inativos, esperando a definição da regra de prazo legal antes de
-          serem ativados.
-        </p>
-        <Link
-          href="/configuracoes/tarefas"
-          className="mt-4 inline-flex rounded-lg bg-[#959D90] px-4 py-2 text-sm font-medium text-white hover:bg-[#87907F]"
-        >
-          Abrir Cadastro de Tarefas
-        </Link>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
+            <h2 className="text-lg font-bold text-[#24252A]">Calendário de Vencimentos</h2>
+            <div className="mt-4">
+              <DueDateCalendar month={displayMonth} todayKey={todayKey} counts={calendarCounts} />
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
+            <h2 className="text-lg font-bold text-[#24252A]">Clientes por estado (Brasil)</h2>
+            <p className="mt-1 text-sm text-[#7D7874]">
+              {totalClientesAtivos} cliente(s) ativo(s) no Brasil
+            </p>
+            <div className="mt-4">
+              <BrazilClientsMap countsByUf={countsByUf} />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
