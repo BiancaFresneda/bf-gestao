@@ -106,7 +106,7 @@ export function Sidebar({ user }: { user: SidebarUser }) {
         </nav>
 
         <Link
-          href="/configuracoes/tarefas/novo"
+          href="/tarefas/nova"
           className="relative mt-3 flex items-center justify-center rounded-lg bg-[#B4762A] py-2 text-sm font-semibold text-[#F5E7D3] transition hover:brightness-105"
         >
           <span className="absolute left-3.5 h-4 w-4">

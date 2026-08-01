@@ -74,8 +74,9 @@ export function DueDateCalendar({
 
           return (
             <div key={key} className="flex justify-center py-1">
-              <div
-                className={`flex h-11 w-11 flex-col items-center justify-center rounded-lg text-sm ${
+              <Link
+                href={`/tarefas?date=${key}`}
+                className={`flex h-11 w-11 flex-col items-center justify-center rounded-lg text-sm transition hover:bg-[#F1EFE9] ${
                   isToday ? "border-2 border-[#959D90] font-bold text-[#24252A]" : inMonth ? "text-[#24252A]" : "text-[#D2CDBD]"
                 }`}
               >
@@ -89,7 +90,7 @@ export function DueDateCalendar({
                     {entry.total}
                   </span>
                 )}
-              </div>
+              </Link>
             </div>
           );
         })}

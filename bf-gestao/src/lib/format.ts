@@ -24,6 +24,16 @@ export function formatDateBR(date: string | Date): string {
   return `${day}/${month}/${d.getUTCFullYear()}`;
 }
 
+// Só a chave mensal ("2026-07") tem exibição amigável definida; demais periodicidades
+// (semanal "2026-W03", trimestral "2026-Q1", semestral "2026-S1", anual "2026") são
+// exibidas como estão, pois já são autoexplicativas.
+export function formatCompetenciaKey(key: string): string {
+  const match = key.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return key;
+  const [, year, month] = match;
+  return `${month}/${year}`;
+}
+
 export function expiryStatus(dataValidade: string | Date) {
   const isExpired = new Date(dataValidade).getTime() < Date.now();
   if (isExpired) {

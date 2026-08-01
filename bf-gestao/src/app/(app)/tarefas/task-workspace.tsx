@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
-import { formatDateBR } from "@/lib/format";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { formatCompetenciaKey, formatDateBR } from "@/lib/format";
 import { ModuleHeader } from "@/components/module-header";
 import { GenerateButton } from "./generate-button";
-import { deleteTask, updateTaskCompletedAt, updateTaskNotes, updateTaskResponsible, updateTaskStatus } from "./actions";
+import {
+  deleteTask,
+  updateTaskCompletedAt,
+  updateTaskMetaDate,
+  updateTaskNotes,
+  updateTaskResponsible,
+  updateTaskStatus,
+} from "./actions";
 
-export type TaskStatusValue = "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA" | "ATRASADA" | "CANCELADA";
+export type TaskStatusValue = "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA" | "ATRASADA" | "DESCONSIDERADA";
 
 export type TaskRow = {
   id: string;
@@ -17,6 +24,9 @@ export type TaskRow = {
   clientLocation: string | null;
   title: string;
   competenciaKey: string;
+  // null = tarefa pontual (avulsa, sem template) — permite editar a data e excluir.
+  // Presente = tarefa recorrente gerada por template — data e exclusão ficam bloqueadas.
+  taskTemplateId: string | null;
   departmentId: string | null;
   departmentName: string | null;
   prazoLegal: string;
@@ -26,6 +36,8 @@ export type TaskRow = {
   responsibleUserName: string | null;
   notes: string | null;
   completedAt: string | null;
+  arquivoUrl: string | null;
+  arquivoNomeOriginal: string | null;
 };
 
 type Department = { id: string; name: string };
@@ -37,7 +49,7 @@ const STATUS_LABEL: Record<TaskStatusValue, string> = {
   EM_ANDAMENTO: "Em andamento",
   CONCLUIDA: "Concluída",
   ATRASADA: "Atrasada",
-  CANCELADA: "Cancelada",
+  DESCONSIDERADA: "Desconsiderada",
 };
 
 const STATUS_CLASS: Record<TaskStatusValue, string> = {
@@ -45,7 +57,7 @@ const STATUS_CLASS: Record<TaskStatusValue, string> = {
   EM_ANDAMENTO: "bg-[#FBEFD9] text-[#B4762A]",
   CONCLUIDA: "bg-[#E5EEE1] text-[#4C7A46]",
   ATRASADA: "bg-[#F6DFDB] text-[#B3453A]",
-  CANCELADA: "bg-[#EFEAE0] text-[#7D7874]",
+  DESCONSIDERADA: "bg-[#EFEAE0] text-[#7D7874]",
 };
 
 const DEPARTMENT_CLASS: Record<string, string> = {
@@ -56,7 +68,7 @@ const DEPARTMENT_CLASS: Record<string, string> = {
   Financeiro: "bg-[#DDEEF2] text-[#2E7C93]",
 };
 
-const EDITABLE_STATUSES: TaskStatusValue[] = ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA", "CANCELADA"];
+const EDITABLE_STATUSES: TaskStatusValue[] = ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA", "DESCONSIDERADA"];
 
 function displayStatus(task: TaskRow): TaskStatusValue {
   if ((task.status === "PENDENTE" || task.status === "EM_ANDAMENTO") && new Date(task.prazoLegal).getTime() < Date.now()) {
@@ -87,6 +99,14 @@ function PersonIcon() {
   );
 }
 
+function PaperclipIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-3.5 w-3.5 flex-shrink-0">
+      <path d="M8 12.5V7a4 4 0 0 1 8 0v8.5a2.5 2.5 0 0 1-5 0V8" />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-3.5 w-3.5">
@@ -108,15 +128,17 @@ export function TaskWorkspace({
   departments,
   users,
   clients,
+  initialDate,
 }: {
   tasks: TaskRow[];
   departments: Department[];
   users: UserOption[];
   clients: ClientOption[];
+  initialDate?: string;
 }) {
   const [statusFilter, setStatusFilter] = useState<"all" | TaskStatusValue>("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(initialDate ?? "");
+  const [dateTo, setDateTo] = useState(initialDate ?? "");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
@@ -143,6 +165,25 @@ export function TaskWorkspace({
   }, [tasks, statusFilter, dateFrom, dateTo, departmentFilter, responsibleFilter, clientFilter, search]);
 
   const selectedTask = filtered.find((t) => t.id === selectedId) ?? filtered[0] ?? null;
+
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    dateFrom !== "" ||
+    dateTo !== "" ||
+    departmentFilter !== "all" ||
+    responsibleFilter !== "all" ||
+    clientFilter !== "all" ||
+    search !== "";
+
+  function handleClearFilters() {
+    setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setDepartmentFilter("all");
+    setResponsibleFilter("all");
+    setClientFilter("all");
+    setSearch("");
+  }
 
   return (
     <div className="flex h-screen flex-col">
@@ -218,6 +259,14 @@ export function TaskWorkspace({
             ))}
           </select>
         </div>
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          disabled={!hasActiveFilters}
+          className="rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#7D7874] hover:bg-[#F7F5EF] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Limpar filtros
+        </button>
       </div>
 
       <div className="flex items-center gap-3 px-8 py-3">
@@ -303,10 +352,37 @@ export function TaskWorkspace({
 function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }) {
   const [isPending, startTransition] = useTransition();
   const [notes, setNotes] = useState(task.notes ?? "");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusValue>(task.status);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const status = displayStatus(task);
+  const isPontual = task.taskTemplateId === null;
+
+  useEffect(() => {
+    setSelectedStatus(task.status);
+  }, [task.status]);
 
   function handleStatusChange(value: TaskStatusValue) {
-    startTransition(() => updateTaskStatus(task.id, value));
+    setSelectedStatus(value);
+
+    // Desconsiderar uma tarefa exige registrar o motivo — sem isso, consultas futuras
+    // não têm como saber por que ela foi desconsiderada.
+    if (value === "DESCONSIDERADA" && !notes.trim()) {
+      setStatusError("Preencha as observações explicando o motivo antes de desconsiderar a tarefa.");
+      return;
+    }
+
+    setStatusError(null);
+    startTransition(async () => {
+      try {
+        if (notes !== (task.notes ?? "")) {
+          await updateTaskNotes(task.id, notes);
+        }
+        await updateTaskStatus(task.id, value);
+      } catch (error) {
+        setStatusError(error instanceof Error ? error.message : "Não foi possível atualizar o status.");
+        setSelectedStatus(task.status);
+      }
+    });
   }
 
   function handleResponsibleChange(value: string) {
@@ -315,6 +391,11 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
 
   function handleCompletedAtChange(value: string) {
     startTransition(() => updateTaskCompletedAt(task.id, value || null));
+  }
+
+  function handleMetaDateChange(value: string) {
+    if (!value) return;
+    startTransition(() => updateTaskMetaDate(task.id, value));
   }
 
   function handleNotesBlur() {
@@ -338,22 +419,24 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={status} />
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isPending}
-            className="flex items-center gap-1.5 rounded-lg border border-[#E1DBCC] px-3 py-1.5 text-sm text-[#B3453A] hover:bg-[#F6DFDB] disabled:opacity-60"
-          >
-            <TrashIcon />
-            Excluir
-          </button>
+          {isPontual && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isPending}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E1DBCC] px-3 py-1.5 text-sm text-[#B3453A] hover:bg-[#F6DFDB] disabled:opacity-60"
+            >
+              <TrashIcon />
+              Excluir
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-[#E1DBCC] p-3">
           <p className="text-xs uppercase text-[#7D7874]">Competência</p>
-          <p className="mt-1 text-sm text-[#24252A]">{task.competenciaKey}</p>
+          <p className="mt-1 text-sm text-[#24252A]">{formatCompetenciaKey(task.competenciaKey)}</p>
         </div>
         <div className="rounded-lg border border-[#E1DBCC] p-3">
           <p className="text-xs uppercase text-[#7D7874]">Departamento</p>
@@ -365,7 +448,17 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
         </div>
         <div className="rounded-lg border border-[#E1DBCC] p-3">
           <p className="text-xs uppercase text-[#7D7874]">Prazo meta</p>
-          <p className="mt-1 text-sm text-[#24252A]">{formatDateBR(task.prazoMeta)}</p>
+          {isPontual ? (
+            <input
+              type="date"
+              defaultValue={dateKey(task.prazoMeta)}
+              disabled={isPending}
+              onChange={(e) => handleMetaDateChange(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-[#E1DBCC] bg-white px-2 py-1 text-sm text-[#24252A] outline-none focus:border-[#959D90] disabled:opacity-60"
+            />
+          ) : (
+            <p className="mt-1 text-sm text-[#24252A]">{formatDateBR(task.prazoMeta)}</p>
+          )}
         </div>
         <div className="rounded-lg border border-[#E1DBCC] p-3">
           <p className="text-xs uppercase text-[#7D7874]">Cliente</p>
@@ -382,13 +475,27 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
           <p className="text-xs uppercase text-[#7D7874]">Localidade</p>
           <p className="mt-1 text-sm text-[#24252A]">{task.clientLocation ?? "—"}</p>
         </div>
+        <div className="rounded-lg border border-[#E1DBCC] p-3">
+          <p className="text-xs uppercase text-[#7D7874]">Anexo</p>
+          {task.arquivoUrl ? (
+            <a
+              href={`/api/tarefas/${task.id}/anexo`}
+              className="mt-1 flex items-center gap-1.5 text-sm text-[#B4762A] hover:underline"
+            >
+              <PaperclipIcon />
+              {task.arquivoNomeOriginal ?? "Baixar arquivo"}
+            </a>
+          ) : (
+            <p className="mt-1 text-sm text-[#24252A]">—</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-sm text-[#7D7874]">Status</label>
           <select
-            defaultValue={task.status}
+            value={selectedStatus}
             disabled={isPending}
             onChange={(e) => handleStatusChange(e.target.value as TaskStatusValue)}
             className="rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90] disabled:opacity-60"
@@ -399,6 +506,7 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
               </option>
             ))}
           </select>
+          {statusError && <p className="text-xs text-[#B3453A]">{statusError}</p>}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm text-[#7D7874]">Responsável</label>

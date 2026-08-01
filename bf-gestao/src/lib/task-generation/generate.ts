@@ -105,6 +105,7 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
               data: {
                 clientId: link.clientId,
                 taskTemplateId: link.taskTemplateId,
+                departmentId: link.taskTemplate.departmentId,
                 title: link.taskTemplate.name,
                 responsibleUserId: link.taskTemplate.defaultResponsibleId,
                 competenciaKey: competencia.key,

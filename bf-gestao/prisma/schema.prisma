@@ -27,6 +27,7 @@ model Department {
   users              User[]
   clientResponsibles ClientResponsible[]
   taskTemplates      TaskTemplate[]
+  tasks              Task[]
 
   @@map("departments")
 }
@@ -234,13 +235,17 @@ enum TaskStatus {
   EM_ANDAMENTO
   CONCLUIDA
   ATRASADA
-  CANCELADA
+  DESCONSIDERADA
 }
 
 model Task {
   id                String     @id @default(cuid())
   clientId          String
   taskTemplateId    String?
+  // Presente em toda tarefa (recorrente ou pontual) — nas recorrentes é copiado do
+  // template na geração; nas pontuais é escolhido no cadastro. Fonte única, nunca lido
+  // via taskTemplate.department.
+  departmentId      String?
   title             String
   // Chave canônica derivada de (periodicidade, competenciaInicio) — nunca do prazo.
   competenciaKey    String
@@ -252,6 +257,10 @@ model Task {
   responsibleUserId String?
   priority          Int?
   notes             String?
+  // Anexo de tarefas pontuais (pdf, imagem, planilha ou txt) — mesmo padrão de
+  // src/lib/file-storage.ts usado pelos certificados.
+  arquivoUrl          String?
+  arquivoNomeOriginal String?
   completedAt       DateTime?
   completedById     String?
   createdAt         DateTime   @default(now())
@@ -259,6 +268,7 @@ model Task {
 
   client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   taskTemplate    TaskTemplate? @relation(fields: [taskTemplateId], references: [id])
+  department      Department?   @relation(fields: [departmentId], references: [id])
   responsibleUser User?         @relation("TaskResponsible", fields: [responsibleUserId], references: [id])
   completedBy     User?         @relation("TaskCompletedBy", fields: [completedById], references: [id])
   history         TaskHistory[]
