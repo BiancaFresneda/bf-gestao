@@ -45,10 +45,10 @@ const CARDS = [
     description: "Defina os módulos/serviços oferecidos pelo escritório (Fiscal, Contábil, BPO, etc.) usados no cadastro do cliente.",
   },
   {
-    href: "/configuracoes/colaboradores",
+    href: "/configuracoes/usuarios",
     icon: <TeamIcon />,
-    title: "Colaboradores",
-    description: "Gerencie a equipe e os níveis de acesso (admin, gestor, colaborador). Novos cadastros entram automaticamente.",
+    title: "Usuários",
+    description: "Gerencie a equipe e os níveis de acesso (admin, colaborador). Novos cadastros entram automaticamente.",
   },
 ] as const;
 
@@ -86,7 +86,7 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div>
-      <ModuleHeader title="Configurações" subtitle="Templates, módulos, colaboradores e ajustes do sistema." />
+      <ModuleHeader title="Configurações" subtitle="Templates, módulos, usuários e ajustes do sistema." />
 
       <div className="grid grid-cols-1 gap-4 p-8 sm:grid-cols-2">
         {CARDS.map((card) => (

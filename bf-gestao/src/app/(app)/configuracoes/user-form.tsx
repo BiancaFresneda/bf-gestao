@@ -50,6 +50,14 @@ export function UserForm({ departments }: { departments: Department[] }) {
         <option value="COLABORADOR">Colaborador</option>
         <option value="ADMIN">Admin</option>
       </select>
+      <label className="flex flex-col gap-1 text-xs text-[#7D7874]">
+        Data de nascimento
+        <input
+          name="birthDate"
+          type="date"
+          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]"
+        />
+      </label>
 
       <div className="sm:col-span-2">
         {state?.error && <p className="mb-2 text-xs text-[#B3453A]">{state.error}</p>}

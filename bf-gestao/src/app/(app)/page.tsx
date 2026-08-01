@@ -4,6 +4,17 @@ import { nowInSaoPauloMidnight, isoDateKey } from "@/lib/task-generation/dates";
 import { DueDateCalendar, type DayCount } from "./due-date-calendar";
 import { BrazilClientsMap } from "./brazil-clients-map";
 
+function CakeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M4 20h16v-5a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v5Z" />
+      <path d="M4 17c1.2 0 1.2-1 2.4-1s1.2 1 2.4 1 1.2-1 2.4-1 1.2 1 2.4 1 1.2-1 2.4-1 1.2 1 2.4 1" />
+      <path d="M9 11V8M12 11V8M15 11V8" />
+      <path d="M9 5.5c0-.9.5-1.2.5-2S9 2 9 2M12 5.5c0-.9.5-1.2.5-2S12 2 12 2M15 5.5c0-.9.5-1.2.5-2S15 2 15 2" />
+    </svg>
+  );
+}
+
 function StatCard({
   label,
   value,
@@ -55,7 +66,7 @@ export default async function DashboardPage({
   const calendarMonthStart = displayMonth;
   const calendarMonthEnd = new Date(Date.UTC(displayMonth.getUTCFullYear(), displayMonth.getUTCMonth() + 1, 1));
 
-  const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats] = await Promise.all([
+  const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats, usersWithBirthDate] = await Promise.all([
     prisma.task.findMany({
       where: { prazoLegal: { gte: currentMonthStart, lt: currentMonthEnd } },
       select: { status: true },
@@ -75,7 +86,16 @@ export default async function DashboardPage({
       select: { prazoLegal: true, status: true },
     }),
     prisma.client.groupBy({ by: ["uf"], where: { status: "ATIVO" }, _count: { _all: true } }),
+    prisma.user.findMany({
+      where: { active: true, birthDate: { not: null } },
+      select: { id: true, name: true, birthDate: true },
+    }),
   ]);
+
+  const birthdayUsers = usersWithBirthDate.filter(
+    (user) =>
+      user.birthDate!.getUTCMonth() === today.getUTCMonth() && user.birthDate!.getUTCDate() === today.getUTCDate(),
+  );
 
   const tarefasDoMes = tasksThisMonth.length;
   const emAndamento = tasksThisMonth.filter((t) => t.status === "EM_ANDAMENTO").length;
@@ -105,6 +125,19 @@ export default async function DashboardPage({
       <ModuleHeader title="Dashboard" subtitle="Visão geral das obrigações do mês e alertas importantes." />
 
       <div className="space-y-6 p-8">
+        {birthdayUsers.length > 0 && (
+          <div className="flex items-center gap-4 rounded-xl border border-[#F0DDB8] bg-[#FBEFD9] p-4">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#B4762A]">
+              <span className="h-5 w-5">
+                <CakeIcon />
+              </span>
+            </span>
+            <p className="text-sm font-medium text-[#8A5A24]">
+              Hoje é aniversário de {birthdayUsers.map((user) => user.name).join(" e ")}! Não esqueça de parabenizar.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             label="Tarefas do mês"
