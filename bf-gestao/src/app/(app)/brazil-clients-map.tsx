@@ -26,10 +26,17 @@ export function BrazilClientsMap({ countsByUf }: { countsByUf: Record<string, nu
         const uf = f.properties?.sigla ?? "";
         const count = countsByUf[uf] ?? 0;
         const label = `${f.properties?.name}: ${count} cliente(s) ativo(s)`;
-        return (
-          <path key={uf} d={path(f) ?? undefined} fill={count > 0 ? "#3D3E40" : "#2E2F2C"} stroke="#F7F5EF" strokeWidth={0.8}>
+        const shape = (
+          <path d={path(f) ?? undefined} fill={count > 0 ? "#3D3E40" : "#2E2F2C"} stroke="#F7F5EF" strokeWidth={0.8}>
             <title>{label}</title>
           </path>
+        );
+        return count > 0 ? (
+          <a key={uf} href={`/clientes?uf=${uf}`} className="cursor-pointer">
+            {shape}
+          </a>
+        ) : (
+          <g key={uf}>{shape}</g>
         );
       })}
       {geo.features.map((f) => {
@@ -40,13 +47,13 @@ export function BrazilClientsMap({ countsByUf }: { countsByUf: Record<string, nu
         const r = radiusFor(count);
         const label = `${f.properties?.name}: ${count} cliente(s) ativo(s)`;
         return (
-          <g key={`bubble-${uf}`}>
+          <a key={`bubble-${uf}`} href={`/clientes?uf=${uf}`} className="cursor-pointer">
             <circle cx={cx} cy={cy} r={r} fill="#F7F5EF" stroke="#24252A" strokeWidth={1} />
             <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={r > 14 ? 13 : 11} fontWeight={700} fill="#24252A">
               {String(count)}
             </text>
             <title>{label}</title>
-          </g>
+          </a>
         );
       })}
     </svg>

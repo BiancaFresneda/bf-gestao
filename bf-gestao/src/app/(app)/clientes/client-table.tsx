@@ -38,9 +38,10 @@ function columnValue(client: ClientRow, column: Column): string {
   }
 }
 
-export function ClientTable({ clients }: { clients: ClientRow[] }) {
+export function ClientTable({ clients, initialUf }: { clients: ClientRow[]; initialUf?: string }) {
   const [search, setSearch] = useState("");
   const [personTypeFilter, setPersonTypeFilter] = useState<"all" | "PJ" | "PF">("all");
+  const [ufFilter, setUfFilter] = useState(initialUf ?? "all");
   const [columnFilters, setColumnFilters] = useState<Record<Column, Set<string>>>({
     nome: new Set(),
     documento: new Set(),
@@ -66,9 +67,14 @@ export function ClientTable({ clients }: { clients: ClientRow[] }) {
     return options;
   }, [clients]);
 
+  const ufOptions = useMemo(() => {
+    return Array.from(new Set(clients.map((c) => c.uf).filter((uf): uf is string => Boolean(uf)))).sort();
+  }, [clients]);
+
   const filtered = clients.filter((client) => {
     if (search && !client.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (personTypeFilter !== "all" && client.personType !== personTypeFilter) return false;
+    if (ufFilter !== "all" && client.uf !== ufFilter) return false;
     for (const column of COLUMNS) {
       const selected = columnFilters[column];
       if (selected.size > 0 && !selected.has(columnValue(client, column))) return false;
@@ -123,6 +129,18 @@ export function ClientTable({ clients }: { clients: ClientRow[] }) {
           <option value="all">PJ e PF</option>
           <option value="PJ">Pessoa jurídica</option>
           <option value="PF">Pessoa física</option>
+        </select>
+        <select
+          value={ufFilter}
+          onChange={(event) => setUfFilter(event.target.value)}
+          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
+        >
+          <option value="all">Todos os estados</option>
+          {ufOptions.map((uf) => (
+            <option key={uf} value={uf}>
+              {uf}
+            </option>
+          ))}
         </select>
         <span className="self-center text-xs text-[#7D7874]">
           {selectedIds.size > 0

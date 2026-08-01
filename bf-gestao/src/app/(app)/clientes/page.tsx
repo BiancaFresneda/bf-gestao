@@ -2,8 +2,13 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { ClientTable } from "./client-table";
 
-export default async function ClientesPage() {
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ uf?: string }>;
+}) {
   await verifySession();
+  const { uf } = await searchParams;
 
   const clients = await prisma.client.findMany({ orderBy: { name: "asc" } });
 
@@ -17,7 +22,7 @@ export default async function ClientesPage() {
       </div>
 
       <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
-        <ClientTable clients={clients} />
+        <ClientTable clients={clients} initialUf={uf} />
       </section>
     </div>
   );
