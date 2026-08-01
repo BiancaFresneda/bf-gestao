@@ -69,9 +69,9 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
           onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
           className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         >
-          <option value="all">Ativas e inativas</option>
-          <option value="active">Só ativas</option>
-          <option value="inactive">Só inativas</option>
+          <option value="all">Todas</option>
+          <option value="active">Ativas</option>
+          <option value="inactive">Inativas</option>
         </select>
         <span className="self-center text-xs text-[#7D7874]">
           {filtered.length} de {templates.length} tarefas

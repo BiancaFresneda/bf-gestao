@@ -30,6 +30,7 @@ export function ModuleHeader({
   backLabel = "Voltar",
   actions,
   clientFilter,
+  hideExtras = false,
 }: {
   title: string;
   subtitle: string;
@@ -37,6 +38,9 @@ export function ModuleHeader({
   backLabel?: string;
   actions?: ReactNode;
   clientFilter?: ClientFilter;
+  // Esconde filiais/clientes/sino — usado por módulos que não fazem sentido por
+  // cliente nem precisam desses atalhos ainda (ex.: catálogo de tarefas recorrentes).
+  hideExtras?: boolean;
 }) {
   return (
     <div className="border-b border-[#E1DBCC] px-8 py-5">
@@ -58,42 +62,46 @@ export function ModuleHeader({
         </div>
         <div className="flex items-center gap-3">
           {actions}
-          <select
-            disabled
-            title="Filiais ainda não existem como conceito neste sistema."
-            className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
-          >
-            <option>Todas as filiais</option>
-          </select>
-          {clientFilter ? (
-            <select
-              value={clientFilter.value}
-              onChange={(e) => clientFilter.onChange(e.target.value)}
-              className="rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]"
-            >
-              <option value="all">Todos os clientes</option>
-              {clientFilter.options.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <select
-              disabled
-              title="Essa tela não é organizada por cliente."
-              className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
-            >
-              <option>Todos os clientes</option>
-            </select>
+          {!hideExtras && (
+            <>
+              <select
+                disabled
+                title="Filiais ainda não existem como conceito neste sistema."
+                className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
+              >
+                <option>Todas as filiais</option>
+              </select>
+              {clientFilter ? (
+                <select
+                  value={clientFilter.value}
+                  onChange={(e) => clientFilter.onChange(e.target.value)}
+                  className="rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]"
+                >
+                  <option value="all">Todos os clientes</option>
+                  {clientFilter.options.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  disabled
+                  title="Essa tela não é organizada por cliente."
+                  className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
+                >
+                  <option>Todos os clientes</option>
+                </select>
+              )}
+              <button
+                type="button"
+                title="Notificações — regras a definir."
+                className="rounded-lg border border-[#E1DBCC] bg-white p-2.5 text-[#7D7874]"
+              >
+                <BellIcon />
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            title="Notificações — regras a definir."
-            className="rounded-lg border border-[#E1DBCC] bg-white p-2.5 text-[#7D7874]"
-          >
-            <BellIcon />
-          </button>
         </div>
       </div>
     </div>

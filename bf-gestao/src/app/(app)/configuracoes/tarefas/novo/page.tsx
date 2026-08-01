@@ -19,6 +19,7 @@ export default async function NovaTarefaPage() {
         subtitle="Cria um novo template no catálogo de tarefas recorrentes."
         backHref="/configuracoes/tarefas"
         backLabel="Voltar para Tarefas"
+        hideExtras
       />
 
       <div className="p-8">

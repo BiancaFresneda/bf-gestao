@@ -185,6 +185,7 @@ export function TaskTemplateForm({
       </div>
 
       {state?.error && <p className="text-sm text-[#B3453A]">{state.error}</p>}
+      {state?.notice && <p className="text-sm text-[#4C7A46]">{state.notice}</p>}
 
       <button
         type="submit"

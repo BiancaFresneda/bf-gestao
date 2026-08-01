@@ -51,7 +51,7 @@ function parseTemplateFromFormData(formData: FormData) {
   });
 }
 
-export type TaskTemplateFormState = { error: string } | undefined;
+export type TaskTemplateFormState = { error: string; notice?: never } | { notice: string; error?: never } | undefined;
 
 export async function createTaskTemplate(
   _prevState: TaskTemplateFormState,
@@ -83,6 +83,7 @@ export async function createTaskTemplate(
   }
 
   revalidatePath("/configuracoes/tarefas");
+  return { notice: "Tarefa criada." };
 }
 
 export async function updateTaskTemplate(
@@ -128,6 +129,7 @@ export async function updateTaskTemplate(
 
   revalidatePath("/configuracoes/tarefas");
   revalidatePath("/tarefas");
+  return { notice: "Alterações salvas." };
 }
 
 export async function toggleTaskTemplateActive(templateId: string, active: boolean) {

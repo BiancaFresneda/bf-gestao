@@ -42,6 +42,7 @@ export default async function EditarTarefaPage({
         subtitle={template.name}
         backHref="/configuracoes/tarefas"
         backLabel="Voltar para Tarefas"
+        hideExtras
       />
 
       <div className="space-y-6 p-8">

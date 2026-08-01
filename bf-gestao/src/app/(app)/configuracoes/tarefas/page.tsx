@@ -28,6 +28,7 @@ export default async function CadastroDeTarefasPage() {
         subtitle="Catálogo de templates de tarefas recorrentes. Templates importados do sistema anterior entram inativos até terem a regra de prazo legal revisada."
         backHref="/configuracoes"
         backLabel="Voltar para Configurações"
+        hideExtras
         actions={
           <Link
             href="/configuracoes/tarefas/novo"
