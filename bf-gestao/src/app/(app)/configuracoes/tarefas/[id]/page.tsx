@@ -5,6 +5,7 @@ import { ModuleHeader } from "@/components/module-header";
 import { TaskTemplateForm } from "../task-template-form";
 import { updateTaskTemplate } from "../actions";
 import { ClientLinksSection } from "../client-links-section";
+import { ChecklistSection } from "../checklist-section";
 
 export default async function EditarTarefaPage({
   params,
@@ -15,7 +16,10 @@ export default async function EditarTarefaPage({
   const { id } = await params;
 
   const [template, departments, users, clients] = await Promise.all([
-    prisma.taskTemplate.findUnique({ where: { id } }),
+    prisma.taskTemplate.findUnique({
+      where: { id },
+      include: { checklistItems: { orderBy: { order: "asc" } } },
+    }),
     prisma.department.findMany({ orderBy: { name: "asc" } }),
     prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.client.findMany({
@@ -54,6 +58,11 @@ export default async function EditarTarefaPage({
             action={updateTaskTemplate.bind(null, template.id)}
           />
         </section>
+
+        <ChecklistSection
+          templateId={template.id}
+          items={template.checklistItems.map((item) => ({ id: item.id, text: item.text, required: item.required }))}
+        />
 
         <ClientLinksSection templateId={template.id} clients={clientOptions} />
       </div>

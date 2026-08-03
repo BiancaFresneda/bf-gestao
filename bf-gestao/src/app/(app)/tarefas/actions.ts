@@ -11,9 +11,13 @@ import { competenciaAt } from "@/lib/task-generation/competencia";
 import { saveUploadedFile } from "@/lib/file-storage";
 import type { TaskStatus } from "@/generated/prisma/enums";
 
-export async function triggerTaskGeneration() {
+// monthsAhead deixa a Bianca planejar meses futuros sem esperar o calendário virar —
+// o teto de geração normalmente é travado no mês atual real, isso empurra esse teto pra
+// frente só nessa chamada manual. Cap em 12 pra não gerar anos de tarefas por engano.
+export async function triggerTaskGeneration(monthsAhead: number = 0) {
   await verifySession();
-  const result = await generateTasks("MANUAL");
+  const clamped = Math.min(Math.max(Math.trunc(monthsAhead) || 0, 0), 12);
+  const result = await generateTasks("MANUAL", clamped);
   revalidatePath("/tarefas");
   revalidatePath("/");
   return result;
@@ -23,12 +27,21 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
   const session = await verifySession();
 
   await prisma.$transaction(async (tx) => {
-    const current = await tx.task.findUniqueOrThrow({ where: { id: taskId }, select: { status: true, notes: true } });
+    const current = await tx.task.findUniqueOrThrow({
+      where: { id: taskId },
+      select: { status: true, notes: true, checklistItems: { select: { required: true, checked: true } } },
+    });
 
     // Desconsiderar exige motivo registrado nas observações — sem isso, uma consulta
     // futura não tem como saber por que a tarefa foi desconsiderada.
     if (status === "DESCONSIDERADA" && !current.notes?.trim()) {
       throw new Error("Preencha as observações explicando o motivo antes de desconsiderar a tarefa.");
+    }
+
+    // Itens obrigatórios do checklist precisam estar marcados antes de fechar a tarefa —
+    // itens opcionais só contam para a barra de progresso, não bloqueiam.
+    if (status === "CONCLUIDA" && current.checklistItems.some((item) => item.required && !item.checked)) {
+      throw new Error("Existem itens obrigatórios do checklist ainda não concluídos.");
     }
 
     await tx.task.update({
@@ -83,7 +96,14 @@ export async function updateTaskCompletedAt(taskId: string, completedAt: string 
   const date = new Date(`${completedAt}T00:00:00Z`);
 
   await prisma.$transaction(async (tx) => {
-    const current = await tx.task.findUniqueOrThrow({ where: { id: taskId }, select: { status: true } });
+    const current = await tx.task.findUniqueOrThrow({
+      where: { id: taskId },
+      select: { status: true, checklistItems: { select: { required: true, checked: true } } },
+    });
+
+    if (current.checklistItems.some((item) => item.required && !item.checked)) {
+      throw new Error("Existem itens obrigatórios do checklist ainda não concluídos.");
+    }
 
     await tx.task.update({
       where: { id: taskId },
@@ -206,6 +226,46 @@ export async function createPontualTask(
   revalidatePath("/tarefas");
   revalidatePath("/");
   redirect("/tarefas");
+}
+
+// Marcar o primeiro item do checklist avança a tarefa pra "Em andamento" automaticamente;
+// desmarcar o último item volta pra "Pendente". Só mexe no status nesses dois sentidos —
+// nunca sobrescreve Concluída ou Desconsiderada, que exigem ação explícita do usuário.
+export async function toggleTaskChecklistItem(taskId: string, itemId: string, checked: boolean) {
+  const session = await verifySession();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.taskChecklistItem.update({
+      where: { id: itemId },
+      data: {
+        checked,
+        checkedAt: checked ? new Date() : null,
+        checkedById: checked ? session.userId : null,
+      },
+    });
+
+    const task = await tx.task.findUniqueOrThrow({
+      where: { id: taskId },
+      select: { status: true, checklistItems: { select: { checked: true } } },
+    });
+
+    const anyChecked = task.checklistItems.some((item) => item.checked);
+
+    if (task.status === "PENDENTE" && anyChecked) {
+      await tx.task.update({ where: { id: taskId }, data: { status: "EM_ANDAMENTO" } });
+      await tx.taskHistory.create({
+        data: { taskId, userId: session.userId, action: "STATUS_CHANGE", oldStatus: "PENDENTE", newStatus: "EM_ANDAMENTO" },
+      });
+    } else if (task.status === "EM_ANDAMENTO" && !anyChecked) {
+      await tx.task.update({ where: { id: taskId }, data: { status: "PENDENTE" } });
+      await tx.taskHistory.create({
+        data: { taskId, userId: session.userId, action: "STATUS_CHANGE", oldStatus: "EM_ANDAMENTO", newStatus: "PENDENTE" },
+      });
+    }
+  });
+
+  revalidatePath("/tarefas");
+  revalidatePath("/");
 }
 
 export async function updateTaskMetaDate(taskId: string, metaDate: string) {

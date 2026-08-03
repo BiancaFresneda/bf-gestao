@@ -26,7 +26,13 @@ function isUniqueConstraintError(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002";
 }
 
-export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<GenerationResult> {
+export async function generateTasks(
+  triggeredBy: "CRON" | "MANUAL",
+  // Meses de antecipação sobre o "hoje" real — usado só para gerar manualmente tarefas de
+  // competências futuras adiantado (planejamento), sem afetar a cadência automática do
+  // cron, que sempre chama com o padrão (0 = teto no mês atual).
+  monthsAhead = 0,
+): Promise<GenerationResult> {
   const lockRows = await prisma.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_lock(${ADVISORY_LOCK_KEY}) as locked`;
   if (!lockRows[0]?.locked) {
     return { runId: null, status: "SKIPPED_LOCK", created: 0, skipped: 0, errors: 0 };
@@ -40,7 +46,7 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
     let errorCount = 0;
 
     try {
-      const referenceDate = nowInSaoPauloMidnight();
+      const referenceDate = shiftMonths(nowInSaoPauloMidnight(), monthsAhead);
       const holidays = await loadHolidaySet();
 
       const links = await prisma.clientTaskTemplate.findMany({
@@ -49,7 +55,9 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
           client: { status: "ATIVO" },
           taskTemplate: { active: true, periodicity: { not: "PONTUAL" } },
         },
-        include: { taskTemplate: true },
+        include: {
+          taskTemplate: { include: { checklistItems: { orderBy: { order: "asc" } } } },
+        },
       });
 
       for (const link of links) {
@@ -113,6 +121,19 @@ export async function generateTasks(triggeredBy: "CRON" | "MANUAL"): Promise<Gen
                 competenciaFim: competencia.fim,
                 prazoLegal,
                 prazoMeta,
+                // Cópia própria do checklist do template no momento da geração — cada
+                // tarefa tem seu progresso independente, mudanças futuras no template não
+                // afetam tarefas já criadas.
+                checklistItems:
+                  link.taskTemplate.checklistItems.length > 0
+                    ? {
+                        create: link.taskTemplate.checklistItems.map((item) => ({
+                          text: item.text,
+                          required: item.required,
+                          order: item.order,
+                        })),
+                      }
+                    : undefined,
               },
             });
             created++;

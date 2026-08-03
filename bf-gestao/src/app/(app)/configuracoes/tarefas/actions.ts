@@ -138,6 +138,36 @@ export async function toggleTaskTemplateActive(templateId: string, active: boole
   revalidatePath("/configuracoes/tarefas");
 }
 
+// Substitui a lista inteira do checklist do template a cada salvamento — mais simples
+// que casar item a item, e seguro porque essa lista nunca é lida diretamente pelas
+// tarefas já geradas (elas têm sua própria cópia em TaskChecklistItem).
+export async function saveTaskTemplateChecklist(
+  templateId: string,
+  items: { text: string; required: boolean }[],
+) {
+  await requireAdmin();
+
+  const cleaned = items.map((item) => ({ text: item.text.trim(), required: item.required })).filter((item) => item.text.length > 0);
+
+  await prisma.$transaction([
+    prisma.taskTemplateChecklistItem.deleteMany({ where: { taskTemplateId: templateId } }),
+    ...(cleaned.length > 0
+      ? [
+          prisma.taskTemplateChecklistItem.createMany({
+            data: cleaned.map((item, index) => ({
+              taskTemplateId: templateId,
+              text: item.text,
+              required: item.required,
+              order: index,
+            })),
+          }),
+        ]
+      : []),
+  ]);
+
+  revalidatePath(`/configuracoes/tarefas/${templateId}`);
+}
+
 export async function saveClientTaskTemplateLinks(templateId: string, clientIds: string[]) {
   await requireAdmin();
 
