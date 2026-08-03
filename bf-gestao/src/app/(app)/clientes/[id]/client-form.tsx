@@ -8,6 +8,7 @@ import { CertificadoSection } from "./certificado-section";
 
 type Partner = { name: string; cpf: string | null; ownershipPercent: number | null };
 type Activity = { code: string; description: string; isPrimary: boolean };
+type EmpresaOption = { id: string; name: string };
 
 type ClientData = {
   id: string;
@@ -19,6 +20,7 @@ type ClientData = {
   tipoAtividade: string | null;
   taxRegime: string | null;
   status: string;
+  empresaId: string | null;
   cep: string | null;
   logradouro: string | null;
   numero: string | null;
@@ -41,7 +43,7 @@ const inputClass =
   "mt-1 w-full rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]";
 const labelClass = "block text-xs font-medium text-[#7D7874]";
 
-export function ClientForm({ client }: { client: ClientData }) {
+export function ClientForm({ client, empresas }: { client: ClientData; empresas: EmpresaOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isImporting, setIsImporting] = useState(false);
@@ -53,6 +55,7 @@ export function ClientForm({ client }: { client: ClientData }) {
   const [tipoAtividade, setTipoAtividade] = useState(client.tipoAtividade ?? "");
   const [taxRegime, setTaxRegime] = useState(client.taxRegime ?? "");
   const [status, setStatus] = useState(client.status);
+  const [empresaId, setEmpresaId] = useState(client.empresaId ?? "");
 
   const [cep, setCep] = useState(client.cep ?? "");
   const [logradouro, setLogradouro] = useState(client.logradouro ?? "");
@@ -133,6 +136,7 @@ export function ClientForm({ client }: { client: ClientData }) {
           tipoAtividade: tipoAtividade || null,
           taxRegime: taxRegime || null,
           status: status as "ATIVO" | "INATIVO" | "SUSPENSO",
+          empresaId: empresaId || null,
           cep: cep || null,
           logradouro: logradouro || null,
           numero: numero || null,
@@ -200,6 +204,17 @@ export function ClientForm({ client }: { client: ClientData }) {
           <div>
             <label className={labelClass}>Regime tributário</label>
             <input value={taxRegime} onChange={(e) => setTaxRegime(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Empresa responsável</label>
+            <select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)} className={inputClass}>
+              <option value="">Sem empresa definida</option>
+              {empresas.map((empresa) => (
+                <option key={empresa.id} value={empresa.id}>
+                  {empresa.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>

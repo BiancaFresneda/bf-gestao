@@ -7,6 +7,7 @@ import { ModuleHeader } from "@/components/module-header";
 import { GenerateButton } from "./generate-button";
 import {
   deleteTask,
+  toggleTaskChecklistItem,
   updateTaskCompletedAt,
   updateTaskMetaDate,
   updateTaskNotes,
@@ -38,11 +39,21 @@ export type TaskRow = {
   completedAt: string | null;
   arquivoUrl: string | null;
   arquivoNomeOriginal: string | null;
+  checklist: ChecklistItemRow[];
+  empresaId: string | null;
+};
+
+export type ChecklistItemRow = {
+  id: string;
+  text: string;
+  required: boolean;
+  checked: boolean;
 };
 
 type Department = { id: string; name: string };
 type UserOption = { id: string; name: string };
 type ClientOption = { id: string; name: string };
+type EmpresaOption = { id: string; name: string };
 
 const STATUS_LABEL: Record<TaskStatusValue, string> = {
   PENDENTE: "Pendente",
@@ -128,12 +139,14 @@ export function TaskWorkspace({
   departments,
   users,
   clients,
+  empresas,
   initialDate,
 }: {
   tasks: TaskRow[];
   departments: Department[];
   users: UserOption[];
   clients: ClientOption[];
+  empresas: EmpresaOption[];
   initialDate?: string;
 }) {
   const [statusFilter, setStatusFilter] = useState<"all" | TaskStatusValue>("all");
@@ -142,6 +155,7 @@ export function TaskWorkspace({
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
+  const [empresaFilter, setEmpresaFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(tasks[0]?.id ?? null);
 
@@ -156,13 +170,14 @@ export function TaskWorkspace({
         if (responsibleFilter !== "none" && task.responsibleUserId !== responsibleFilter) return false;
       }
       if (clientFilter !== "all" && task.clientId !== clientFilter) return false;
+      if (empresaFilter !== "all" && task.empresaId !== empresaFilter) return false;
       if (search) {
         const term = search.toLowerCase();
         if (!task.clientName.toLowerCase().includes(term) && !task.title.toLowerCase().includes(term)) return false;
       }
       return true;
     });
-  }, [tasks, statusFilter, dateFrom, dateTo, departmentFilter, responsibleFilter, clientFilter, search]);
+  }, [tasks, statusFilter, dateFrom, dateTo, departmentFilter, responsibleFilter, clientFilter, empresaFilter, search]);
 
   const selectedTask = filtered.find((t) => t.id === selectedId) ?? filtered[0] ?? null;
 
@@ -173,6 +188,7 @@ export function TaskWorkspace({
     departmentFilter !== "all" ||
     responsibleFilter !== "all" ||
     clientFilter !== "all" ||
+    empresaFilter !== "all" ||
     search !== "";
 
   function handleClearFilters() {
@@ -182,6 +198,7 @@ export function TaskWorkspace({
     setDepartmentFilter("all");
     setResponsibleFilter("all");
     setClientFilter("all");
+    setEmpresaFilter("all");
     setSearch("");
   }
 
@@ -192,6 +209,7 @@ export function TaskWorkspace({
         subtitle="Gestão de obrigações e ordens de serviço."
         actions={<GenerateButton />}
         clientFilter={{ value: clientFilter, onChange: setClientFilter, options: clients }}
+        empresaFilter={{ value: empresaFilter, onChange: setEmpresaFilter, options: empresas }}
       />
 
       <div className="flex flex-wrap items-end gap-3 border-b border-[#E1DBCC] px-8 py-4">
@@ -349,6 +367,60 @@ export function TaskWorkspace({
   );
 }
 
+function ChecklistBox({ taskId, items }: { taskId: string; items: ChecklistItemRow[] }) {
+  const [checkedState, setCheckedState] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(items.map((item) => [item.id, item.checked])),
+  );
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setCheckedState(Object.fromEntries(items.map((item) => [item.id, item.checked])));
+  }, [items]);
+
+  if (items.length === 0) return null;
+
+  const doneCount = Object.values(checkedState).filter(Boolean).length;
+
+  function handleToggle(itemId: string, checked: boolean) {
+    setCheckedState((prev) => ({ ...prev, [itemId]: checked }));
+    startTransition(() => toggleTaskChecklistItem(taskId, itemId, checked));
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-[#7D7874]">Checklist</label>
+        <span className="text-xs text-[#7D7874]">
+          {doneCount} de {items.length} concluídos
+        </span>
+      </div>
+      <ul className="divide-y divide-[#EFEAE0] rounded-lg border border-[#E1DBCC]">
+        {items.map((item) => {
+          const checked = checkedState[item.id] ?? item.checked;
+          return (
+            <li key={item.id} className="flex items-center gap-2 px-3 py-2">
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={isPending}
+                onChange={(e) => handleToggle(item.id, e.target.checked)}
+              />
+              <span className={`flex-1 text-sm ${checked ? "text-[#7D7874] line-through" : "text-[#24252A]"}`}>
+                {item.text}
+              </span>
+              {item.required && (
+                <span className="rounded-full bg-[#FBEFD9] px-2 py-0.5 text-[10px] text-[#B4762A]">
+                  Obrigatório
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }) {
   const [isPending, startTransition] = useTransition();
   const [notes, setNotes] = useState(task.notes ?? "");
@@ -390,7 +462,13 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
   }
 
   function handleCompletedAtChange(value: string) {
-    startTransition(() => updateTaskCompletedAt(task.id, value || null));
+    startTransition(async () => {
+      try {
+        await updateTaskCompletedAt(task.id, value || null);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Não foi possível concluir a tarefa.");
+      }
+    });
   }
 
   function handleMetaDateChange(value: string) {
@@ -490,6 +568,8 @@ function TaskDetailPanel({ task, users }: { task: TaskRow; users: UserOption[] }
           )}
         </div>
       </div>
+
+      <ChecklistBox taskId={task.id} items={task.checklist} />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">

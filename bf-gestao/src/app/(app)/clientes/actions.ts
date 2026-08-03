@@ -87,6 +87,7 @@ export type SaveClientInput = {
   tipoAtividade: string | null;
   taxRegime: string | null;
   status: "ATIVO" | "INATIVO" | "SUSPENSO";
+  empresaId: string | null;
   cep: string | null;
   logradouro: string | null;
   numero: string | null;
@@ -110,6 +111,7 @@ export async function saveClientFull(clientId: string, input: SaveClientInput) {
         tipoAtividade: input.tipoAtividade,
         taxRegime: input.taxRegime,
         status: input.status,
+        empresaId: input.empresaId,
         cep: input.cep,
         logradouro: input.logradouro,
         numero: input.numero,

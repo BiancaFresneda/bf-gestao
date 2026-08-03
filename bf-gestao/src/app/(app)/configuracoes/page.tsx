@@ -21,6 +21,16 @@ function ModulesIcon() {
   );
 }
 
+function BuildingIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+      <rect x="4" y="3" width="10" height="18" rx="1" />
+      <rect x="14" y="8" width="6" height="13" rx="1" />
+      <path d="M7 7h1M7 11h1M7 15h1M10 7h1M10 11h1M10 15h1" />
+    </svg>
+  );
+}
+
 function TeamIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
@@ -32,6 +42,12 @@ function TeamIcon() {
 }
 
 const CARDS = [
+  {
+    href: "/configuracoes/empresas",
+    icon: <BuildingIcon />,
+    title: "Empresas",
+    description: "Cadastro das empresas do grupo BF (BR e EUA) — dados cadastrais para consulta e referência.",
+  },
   {
     href: "/configuracoes/tarefas",
     icon: <ChecklistIcon />,

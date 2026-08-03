@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { ModuleHeader } from "@/components/module-header";
 import { nowInSaoPauloMidnight, isoDateKey } from "@/lib/task-generation/dates";
 import { DueDateCalendar, type DayCount } from "./due-date-calendar";
 import { BrazilClientsMap } from "./brazil-clients-map";
+import { DashboardHeader } from "./dashboard-header";
 
 function CakeIcon() {
   return (
@@ -50,9 +50,9 @@ function StatCard({
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; empresa?: string }>;
 }) {
-  const { month: monthParam } = await searchParams;
+  const { month: monthParam, empresa: empresaParam } = await searchParams;
   const today = nowInSaoPauloMidnight();
   const now = new Date();
   const todayKey = isoDateKey(today);
@@ -66,30 +66,37 @@ export default async function DashboardPage({
   const calendarMonthStart = displayMonth;
   const calendarMonthEnd = new Date(Date.UTC(displayMonth.getUTCFullYear(), displayMonth.getUTCMonth() + 1, 1));
 
-  const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats, usersWithBirthDate] = await Promise.all([
+  // Filtro de empresa recorta tudo que é ligado a Cliente (tarefas, mapa por estado) —
+  // aniversários de usuários não têm empresa, ficam de fora desse recorte.
+  const empresaId = empresaParam && empresaParam !== "all" ? empresaParam : undefined;
+  const clientEmpresaWhere = empresaId ? { empresaId } : {};
+
+  const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats, usersWithBirthDate, empresas] = await Promise.all([
     prisma.task.findMany({
-      where: { prazoLegal: { gte: currentMonthStart, lt: currentMonthEnd } },
+      where: { prazoLegal: { gte: currentMonthStart, lt: currentMonthEnd }, client: clientEmpresaWhere },
       select: { status: true },
     }),
     prisma.task.count({
-      where: { status: { in: ["PENDENTE", "EM_ANDAMENTO"] }, prazoLegal: { lt: now } },
+      where: { status: { in: ["PENDENTE", "EM_ANDAMENTO"] }, prazoLegal: { lt: now }, client: clientEmpresaWhere },
     }),
     prisma.task.count({
       where: {
         status: { in: ["PENDENTE", "EM_ANDAMENTO"] },
         prazoLegal: { lt: now },
         taskTemplate: { geraMulta: true },
+        client: clientEmpresaWhere,
       },
     }),
     prisma.task.findMany({
-      where: { prazoLegal: { gte: calendarMonthStart, lt: calendarMonthEnd } },
+      where: { prazoLegal: { gte: calendarMonthStart, lt: calendarMonthEnd }, client: clientEmpresaWhere },
       select: { prazoLegal: true, status: true },
     }),
-    prisma.client.groupBy({ by: ["uf"], where: { status: "ATIVO" }, _count: { _all: true } }),
+    prisma.client.groupBy({ by: ["uf"], where: { status: "ATIVO", ...clientEmpresaWhere }, _count: { _all: true } }),
     prisma.user.findMany({
       where: { active: true, birthDate: { not: null } },
       select: { id: true, name: true, birthDate: true },
     }),
+    prisma.empresa.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
   ]);
 
   const birthdayUsers = usersWithBirthDate.filter(
@@ -122,7 +129,10 @@ export default async function DashboardPage({
 
   return (
     <div>
-      <ModuleHeader title="Dashboard" subtitle="Visão geral das obrigações do mês e alertas importantes." />
+      <DashboardHeader
+        empresas={empresas.map((e) => ({ id: e.id, name: e.name }))}
+        currentEmpresaId={empresaId ?? "all"}
+      />
 
       <div className="space-y-6 p-8">
         {birthdayUsers.length > 0 && (

@@ -50,12 +50,48 @@ model User {
   assignedTasks            Task[]              @relation("TaskResponsible")
   completedTasks           Task[]              @relation("TaskCompletedBy")
   taskHistoryEntries       TaskHistory[]
+  checkedChecklistItems    TaskChecklistItem[]
   certidoesResponsible     Certidao[]
   certificados             Certificado[]       @relation("CertificadoOwner")
   certificadosResp         Certificado[]       @relation("CertificadoResponsible")
   defaultResponsibleForTemplates TaskTemplate[]
 
   @@map("users")
+}
+
+// ---------- Empresas do grupo (BF) ----------
+// Cadastro das empresas do próprio escritório (não confundir com Client, que são os
+// clientes atendidos) — hoje BF Serviços Contábeis (BR) e a entidade dos EUA. Serve pra
+// consulta/referência; sem sócios ou financeiro por enquanto.
+
+enum EmpresaTaxIdType {
+  CNPJ
+  EIN
+}
+
+model Empresa {
+  id                 String           @id @default(cuid())
+  name               String
+  tradeName          String?
+  country            String           @default("BR")
+  taxIdType          EmpresaTaxIdType @default(CNPJ)
+  taxId              String?          @unique
+  inscricaoMunicipal String?
+  inscricaoEstadual  String?
+  taxRegime          String?
+  openingDate        DateTime?
+  addressLine1       String?
+  addressLine2       String?
+  city               String?
+  stateProvince      String?
+  postalCode         String?
+  active             Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  clients Client[]
+
+  @@map("empresas")
 }
 
 // ---------- Clientes ----------
@@ -92,9 +128,13 @@ model Client {
   bairro             String?
   uf                 String?
   municipio          String?
+  // Qual empresa do grupo BF atende este cliente — opcional porque a base existente
+  // (importada antes desse cadastro existir) ainda não tem isso atribuído.
+  empresaId          String?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
+  empresa           Empresa?             @relation(fields: [empresaId], references: [id])
   modules           ClientModule[]
   responsibles      ClientResponsible[]
   taskTemplateLinks ClientTaskTemplate[]
@@ -106,6 +146,7 @@ model Client {
   partners          ClientPartner[]
   activities        ClientActivity[]
 
+  @@index([empresaId])
   @@map("clients")
 }
 
@@ -211,8 +252,26 @@ model TaskTemplate {
   clientLinks        ClientTaskTemplate[]
   tasks              Task[]
   generationItems    TaskGenerationRunItem[]
+  checklistItems      TaskTemplateChecklistItem[]
 
   @@map("task_templates")
+}
+
+// Modelo do checklist, definido manualmente no cadastro da tarefa recorrente. Editar
+// aqui só vale para as tarefas geradas dali pra frente — cada Task copia esses itens
+// pra TaskChecklistItem no momento da geração (ver generateTasks), então tarefas já
+// criadas nunca são afetadas por uma mudança posterior no template.
+model TaskTemplateChecklistItem {
+  id             String   @id @default(cuid())
+  taskTemplateId String
+  text           String
+  required       Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  taskTemplate TaskTemplate @relation(fields: [taskTemplateId], references: [id], onDelete: Cascade)
+
+  @@map("task_template_checklist_items")
 }
 
 model ClientTaskTemplate {
@@ -272,6 +331,7 @@ model Task {
   responsibleUser User?         @relation("TaskResponsible", fields: [responsibleUserId], references: [id])
   completedBy     User?         @relation("TaskCompletedBy", fields: [completedById], references: [id])
   history         TaskHistory[]
+  checklistItems  TaskChecklistItem[]
 
   // Garante idempotência da geração automática — nunca duplica a mesma competência
   // para o mesmo vínculo cliente+template.
@@ -279,6 +339,25 @@ model Task {
   @@index([status])
   @@index([prazoLegal])
   @@map("tasks")
+}
+
+// Cópia, por tarefa, dos itens de TaskTemplateChecklistItem no momento da geração —
+// cada Task tem seu próprio progresso, independente de outras tarefas do mesmo template.
+model TaskChecklistItem {
+  id          String    @id @default(cuid())
+  taskId      String
+  text        String
+  required    Boolean   @default(false)
+  order       Int       @default(0)
+  checked     Boolean   @default(false)
+  checkedAt   DateTime?
+  checkedById String?
+
+  task      Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  checkedBy User? @relation(fields: [checkedById], references: [id])
+
+  @@index([taskId])
+  @@map("task_checklist_items")
 }
 
 model TaskHistory {

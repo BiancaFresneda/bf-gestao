@@ -13,14 +13,17 @@ export default async function ClientEditPage({
   await verifySession();
   const { id } = await params;
 
-  const client = await prisma.client.findUnique({
-    where: { id },
-    include: {
-      partners: true,
-      activities: true,
-      certificados: { orderBy: { dataValidade: "desc" } },
-    },
-  });
+  const [client, empresas] = await Promise.all([
+    prisma.client.findUnique({
+      where: { id },
+      include: {
+        partners: true,
+        activities: true,
+        certificados: { orderBy: { dataValidade: "desc" } },
+      },
+    }),
+    prisma.empresa.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+  ]);
 
   if (!client) {
     notFound();
@@ -46,6 +49,7 @@ export default async function ClientEditPage({
       </div>
 
       <ClientForm
+        empresas={empresas.map((empresa) => ({ id: empresa.id, name: empresa.name }))}
         client={{
           id: client.id,
           name: client.name,
@@ -56,6 +60,7 @@ export default async function ClientEditPage({
           tipoAtividade: client.tipoAtividade,
           taxRegime: client.taxRegime,
           status: client.status,
+          empresaId: client.empresaId,
           cep: client.cep,
           logradouro: client.logradouro,
           numero: client.numero,

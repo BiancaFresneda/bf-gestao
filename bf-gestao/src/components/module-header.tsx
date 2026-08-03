@@ -4,11 +4,18 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 type ClientOption = { id: string; name: string };
+type EmpresaOption = { id: string; name: string };
 
 type ClientFilter = {
   value: string;
   onChange: (value: string) => void;
   options: ClientOption[];
+};
+
+type EmpresaFilter = {
+  value: string;
+  onChange: (value: string) => void;
+  options: EmpresaOption[];
 };
 
 function BellIcon() {
@@ -21,8 +28,8 @@ function BellIcon() {
 }
 
 // Cabeçalho padrão de todos os módulos: título/subtítulo à esquerda, filtros de
-// filial/cliente e sino à direita. "Filiais" ainda não existe como conceito no sistema
-// (fica sempre inerte); "clientes" só é funcional quando a tela faz sentido por cliente.
+// empresa/cliente e sino à direita. "Empresa" e "clientes" só são funcionais quando a
+// tela faz sentido por esse recorte — senão ficam desabilitados.
 export function ModuleHeader({
   title,
   subtitle,
@@ -30,6 +37,7 @@ export function ModuleHeader({
   backLabel = "Voltar",
   actions,
   clientFilter,
+  empresaFilter,
   hideExtras = false,
 }: {
   title: string;
@@ -38,7 +46,8 @@ export function ModuleHeader({
   backLabel?: string;
   actions?: ReactNode;
   clientFilter?: ClientFilter;
-  // Esconde filiais/clientes/sino — usado por módulos que não fazem sentido por
+  empresaFilter?: EmpresaFilter;
+  // Esconde empresa/clientes/sino — usado por módulos que não fazem sentido por
   // cliente nem precisam desses atalhos ainda (ex.: catálogo de tarefas recorrentes).
   hideExtras?: boolean;
 }) {
@@ -64,13 +73,28 @@ export function ModuleHeader({
           {actions}
           {!hideExtras && (
             <>
-              <select
-                disabled
-                title="Filiais ainda não existem como conceito neste sistema."
-                className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
-              >
-                <option>Todas as filiais</option>
-              </select>
+              {empresaFilter ? (
+                <select
+                  value={empresaFilter.value}
+                  onChange={(e) => empresaFilter.onChange(e.target.value)}
+                  className="rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#24252A] outline-none focus:border-[#959D90]"
+                >
+                  <option value="all">Todas as empresas</option>
+                  {empresaFilter.options.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  disabled
+                  title="Esta tela ainda não filtra por empresa."
+                  className="cursor-not-allowed rounded-lg border border-[#E1DBCC] bg-white px-3 py-2 text-sm text-[#B3AFA2] opacity-70 outline-none"
+                >
+                  <option>Todas as empresas</option>
+                </select>
+              )}
               {clientFilter ? (
                 <select
                   value={clientFilter.value}

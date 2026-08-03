@@ -10,18 +10,20 @@ export default async function TarefasPage({
   await verifySession();
   const { date } = await searchParams;
 
-  const [tasks, departments, users, clients] = await Promise.all([
+  const [tasks, departments, users, clients, empresas] = await Promise.all([
     prisma.task.findMany({
       include: {
-        client: { select: { id: true, name: true, personType: true, municipio: true, uf: true } },
+        client: { select: { id: true, name: true, personType: true, municipio: true, uf: true, empresaId: true } },
         responsibleUser: { select: { id: true, name: true } },
         department: { select: { id: true, name: true } },
+        checklistItems: { orderBy: { order: "asc" } },
       },
       orderBy: { prazoLegal: "asc" },
     }),
     prisma.department.findMany({ orderBy: { name: "asc" } }),
     prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.empresa.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
   ]);
 
   const rows: TaskRow[] = tasks.map((task) => ({
@@ -30,6 +32,7 @@ export default async function TarefasPage({
     clientName: task.client.name,
     clientPersonType: task.client.personType,
     clientLocation: task.client.municipio && task.client.uf ? `${task.client.municipio}/${task.client.uf}` : null,
+    empresaId: task.client.empresaId,
     title: task.title,
     competenciaKey: task.competenciaKey,
     taskTemplateId: task.taskTemplateId,
@@ -44,6 +47,12 @@ export default async function TarefasPage({
     completedAt: task.completedAt ? task.completedAt.toISOString() : null,
     arquivoUrl: task.arquivoUrl,
     arquivoNomeOriginal: task.arquivoNomeOriginal,
+    checklist: task.checklistItems.map((item) => ({
+      id: item.id,
+      text: item.text,
+      required: item.required,
+      checked: item.checked,
+    })),
   }));
 
   return (
@@ -52,6 +61,7 @@ export default async function TarefasPage({
       departments={departments.map((d) => ({ id: d.id, name: d.name }))}
       users={users}
       clients={clients}
+      empresas={empresas.map((e) => ({ id: e.id, name: e.name }))}
       initialDate={date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined}
     />
   );
