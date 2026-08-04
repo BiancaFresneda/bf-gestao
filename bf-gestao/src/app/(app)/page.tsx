@@ -1,8 +1,16 @@
+import { geoAlbersUsa } from "d3-geo";
+import type { Topology } from "topojson-specification";
 import { prisma } from "@/lib/prisma";
 import { nowInSaoPauloMidnight, isoDateKey } from "@/lib/task-generation/dates";
+import { ISO_NUMERIC_BY_COUNTRY } from "@/lib/countries";
 import { DueDateCalendar, type DayCount } from "./due-date-calendar";
-import { BrazilClientsMap } from "./brazil-clients-map";
+import { StatesBubbleMap } from "./states-bubble-map";
+import { WorldClientsMap } from "./world-clients-map";
 import { DashboardHeader } from "./dashboard-header";
+import brazilTopology from "@/data/brazil-states-topo.json";
+import usTopology from "@/data/us-states-topo.json";
+
+const COUNTRY_LABEL: Record<string, string> = { BR: "Brasil", US: "Estados Unidos" };
 
 function CakeIcon() {
   return (
@@ -11,6 +19,17 @@ function CakeIcon() {
       <path d="M4 17c1.2 0 1.2-1 2.4-1s1.2 1 2.4 1 1.2-1 2.4-1 1.2 1 2.4 1 1.2-1 2.4-1 1.2 1 2.4 1" />
       <path d="M9 11V8M12 11V8M15 11V8" />
       <path d="M9 5.5c0-.9.5-1.2.5-2S9 2 9 2M12 5.5c0-.9.5-1.2.5-2S12 2 12 2M15 5.5c0-.9.5-1.2.5-2S15 2 15 2" />
+    </svg>
+  );
+}
+
+function HourglassIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M5 22h14" />
+      <path d="M5 2h14" />
+      <path d="M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41a2 2 0 0 0-.59 1.42V22" />
+      <path d="M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2" />
     </svg>
   );
 }
@@ -26,13 +45,17 @@ function StatCard({
   value: string;
   sub?: string;
   icon: React.ReactNode;
-  tone?: "neutral" | "good" | "warn" | "bad";
+  tone?: "neutral" | "good" | "andamento" | "atraso" | "multa";
 }) {
   const toneClasses = {
     neutral: "bg-[#EFEAE0] text-[#3D3E40]",
     good: "bg-[#E5EEE1] text-[#4C7A46]",
-    warn: "bg-[#F5E7D3] text-[#B4762A]",
-    bad: "bg-[#F6DFDB] text-[#B3453A]",
+    // Mesmo tom do botão "Nova Tarefa" (sidebar), só que translúcido sobre o card branco.
+    andamento: "bg-[#B4762A]/15 text-[#B4762A]",
+    atraso: "bg-[#B3453A]/15 text-[#B3453A]",
+    // Sem transparência e com o ícone em branco de propósito — precisa chamar mais
+    // atenção que "Em atraso", já que risco de multa é o alerta mais grave do Dashboard.
+    multa: "bg-[#B3453A] text-white",
   }[tone];
 
   return (
@@ -50,9 +73,9 @@ function StatCard({
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; empresa?: string }>;
+  searchParams: Promise<{ month?: string; empresa?: string; tipo?: string }>;
 }) {
-  const { month: monthParam, empresa: empresaParam } = await searchParams;
+  const { month: monthParam, empresa: empresaParam, tipo: tipoParam } = await searchParams;
   const today = nowInSaoPauloMidnight();
   const now = new Date();
   const todayKey = isoDateKey(today);
@@ -66,10 +89,14 @@ export default async function DashboardPage({
   const calendarMonthStart = displayMonth;
   const calendarMonthEnd = new Date(Date.UTC(displayMonth.getUTCFullYear(), displayMonth.getUTCMonth() + 1, 1));
 
-  // Filtro de empresa recorta tudo que é ligado a Cliente (tarefas, mapa por estado) —
-  // aniversários de usuários não têm empresa, ficam de fora desse recorte.
+  // Filtro de empresa e de tipo de pessoa recortam tudo que é ligado a Cliente (tarefas,
+  // mapa por estado) — aniversários de usuários não têm empresa nem tipo, ficam de fora
+  // desse recorte.
   const empresaId = empresaParam && empresaParam !== "all" ? empresaParam : undefined;
-  const clientEmpresaWhere = empresaId ? { empresaId } : {};
+  const personType: "PJ" | "PF" | undefined = tipoParam === "PJ" ? "PJ" : tipoParam === "PF" ? "PF" : undefined;
+  const clientEmpresaWhere: { empresaId?: string; personType?: "PJ" | "PF" } = {};
+  if (empresaId) clientEmpresaWhere.empresaId = empresaId;
+  if (personType) clientEmpresaWhere.personType = personType;
 
   const [tasksThisMonth, overdueCount, overdueMultaCount, calendarTasks, clientStats, usersWithBirthDate, empresas] = await Promise.all([
     prisma.task.findMany({
@@ -91,7 +118,7 @@ export default async function DashboardPage({
       where: { prazoLegal: { gte: calendarMonthStart, lt: calendarMonthEnd }, client: clientEmpresaWhere },
       select: { prazoLegal: true, status: true },
     }),
-    prisma.client.groupBy({ by: ["uf"], where: { status: "ATIVO", ...clientEmpresaWhere }, _count: { _all: true } }),
+    prisma.client.groupBy({ by: ["country", "uf"], where: { status: "ATIVO", ...clientEmpresaWhere }, _count: { _all: true } }),
     prisma.user.findMany({
       where: { active: true, birthDate: { not: null } },
       select: { id: true, name: true, birthDate: true },
@@ -120,11 +147,38 @@ export default async function DashboardPage({
     calendarCounts.set(key, entry);
   }
 
+  // Mesma consulta serve os dois recortes: por UF (mapa de um país específico) e por
+  // país (mapa mundial) — não dá pra saber de antemão qual mapa vai renderizar porque
+  // isso depende da unidade escolhida no filtro do cabeçalho.
   const countsByUf: Record<string, number> = {};
+  const countsByCountry: Record<string, number> = {};
   let totalClientesAtivos = 0;
   for (const row of clientStats) {
-    if (row.uf) countsByUf[row.uf] = row._count._all;
     totalClientesAtivos += row._count._all;
+    countsByCountry[row.country] = (countsByCountry[row.country] ?? 0) + row._count._all;
+    if (row.uf) {
+      const sigla = row.uf.trim().toUpperCase();
+      countsByUf[sigla] = (countsByUf[sigla] ?? 0) + row._count._all;
+    }
+  }
+
+  // A unidade escolhida no filtro decide o país do mapa; sem unidade selecionada, mostra
+  // o mundo inteiro com uma bolinha por país. "país" aqui só existe pros que já têm
+  // clientes ativos — nada fica hardcoded em BR/EUA.
+  const selectedEmpresa = empresaId ? empresas.find((e) => e.id === empresaId) : undefined;
+  const mapCountry = selectedEmpresa?.country;
+
+  const empresaIdByCountry: Record<string, string> = {};
+  for (const empresa of empresas) {
+    if (!empresaIdByCountry[empresa.country]) empresaIdByCountry[empresa.country] = empresa.id;
+  }
+  const worldRegions: Record<string, { count: number; href: string }> = {};
+  for (const [country, count] of Object.entries(countsByCountry)) {
+    const isoId = ISO_NUMERIC_BY_COUNTRY[country];
+    const targetEmpresaId = empresaIdByCountry[country];
+    if (isoId && count > 0 && targetEmpresaId) {
+      worldRegions[isoId] = { count, href: `/?empresa=${targetEmpresaId}` };
+    }
   }
 
   return (
@@ -132,6 +186,7 @@ export default async function DashboardPage({
       <DashboardHeader
         empresas={empresas.map((e) => ({ id: e.id, name: e.name }))}
         currentEmpresaId={empresaId ?? "all"}
+        currentPersonType={personType ?? "all"}
       />
 
       <div className="space-y-6 p-8">
@@ -162,17 +217,13 @@ export default async function DashboardPage({
           <StatCard
             label="Em andamento"
             value={String(emAndamento)}
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M12 3a9 9 0 1 0 9 9" />
-                <path d="M12 3v4" />
-              </svg>
-            }
+            tone="andamento"
+            icon={<HourglassIcon />}
           />
           <StatCard
             label="Em atraso"
             value={String(overdueCount)}
-            tone={overdueCount > 0 ? "warn" : "neutral"}
+            tone="atraso"
             icon={
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <circle cx="12" cy="12" r="9" />
@@ -183,7 +234,7 @@ export default async function DashboardPage({
           <StatCard
             label="Risco de multa"
             value={String(overdueMultaCount)}
-            tone={overdueMultaCount > 0 ? "bad" : "neutral"}
+            tone="multa"
             icon={
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="M12 2 3 6.5v5.7C3 17.1 6.9 21 12 22c5.1-1 9-4.9 9-9.8V6.5L12 2Z" />
@@ -213,12 +264,32 @@ export default async function DashboardPage({
           </section>
 
           <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
-            <h2 className="text-lg font-bold text-[#24252A]">Clientes por estado (Brasil)</h2>
+            <h2 className="text-lg font-bold text-[#24252A]">
+              {mapCountry ? `Clientes por estado (${COUNTRY_LABEL[mapCountry] ?? mapCountry})` : "Clientes por país"}
+            </h2>
             <p className="mt-1 text-sm text-[#7D7874]">
-              {totalClientesAtivos} cliente(s) ativo(s) no Brasil
+              {totalClientesAtivos} cliente(s) ativo(s)
+              {mapCountry ? ` em ${COUNTRY_LABEL[mapCountry] ?? mapCountry}` : ""}
             </p>
             <div className="mt-4">
-              <BrazilClientsMap countsByUf={countsByUf} />
+              {!mapCountry && <WorldClientsMap regions={worldRegions} />}
+              {mapCountry === "US" && (
+                <StatesBubbleMap
+                  topology={usTopology as unknown as Topology}
+                  countsBySigla={countsByUf}
+                  hrefFor={(sigla) => `/clientes?uf=${sigla}`}
+                  ariaLabel="Clientes ativos por estado nos Estados Unidos"
+                  makeProjection={geoAlbersUsa}
+                />
+              )}
+              {mapCountry !== "US" && mapCountry !== undefined && (
+                <StatesBubbleMap
+                  topology={brazilTopology as unknown as Topology}
+                  countsBySigla={countsByUf}
+                  hrefFor={(sigla) => `/clientes?uf=${sigla}`}
+                  ariaLabel="Clientes ativos por estado no Brasil"
+                />
+              )}
             </div>
           </section>
         </div>
