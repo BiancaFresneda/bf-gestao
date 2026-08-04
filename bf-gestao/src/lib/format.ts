@@ -8,9 +8,25 @@ export function formatCpf(value: string): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
 }
 
-export function formatDocument(client: { personType: string; cnpj?: string | null; cpf?: string | null }): string {
-  if (client.personType === "PJ" && client.cnpj) return formatCnpj(client.cnpj);
-  if (client.cpf) return formatCpf(client.cpf);
+export function formatEin(value: string): string {
+  const d = value.replace(/\D/g, "").padEnd(9, "");
+  return `${d.slice(0, 2)}-${d.slice(2, 9)}`;
+}
+
+export function formatSsn(value: string): string {
+  const d = value.replace(/\D/g, "").padEnd(9, "");
+  return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5, 9)}`;
+}
+
+export function formatDocument(client: {
+  personType: string;
+  country?: string | null;
+  cnpj?: string | null;
+  cpf?: string | null;
+}): string {
+  const isUs = client.country === "US";
+  if (client.personType === "PJ" && client.cnpj) return isUs ? formatEin(client.cnpj) : formatCnpj(client.cnpj);
+  if (client.cpf) return isUs ? formatSsn(client.cpf) : formatCpf(client.cpf);
   return "—";
 }
 

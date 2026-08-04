@@ -1,8 +1,98 @@
 "use server";
 
+import * as z from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+const NewClientSchema = z.object({
+  name: z.string().trim().min(2, { error: "Informe o nome ou razão social." }),
+  country: z.enum(["BR", "US"]),
+  personType: z.enum(["PJ", "PF"]),
+  document: z.string().optional(),
+  empresaId: z.string().optional(),
+  cep: z.string().optional(),
+  logradouro: z.string().optional(),
+  numero: z.string().optional(),
+  complemento: z.string().optional(),
+  bairro: z.string().optional(),
+  municipio: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+// País decide qual documento o cliente usa — BR segue CNPJ/CPF, EUA usa EIN (pessoa
+// jurídica) ou SSN (pessoa física). Isso precisa ser definido já na criação porque muda
+// tanto o rótulo/máscara do campo quanto a quantidade de dígitos esperada.
+function documentSpec(country: "BR" | "US", personType: "PJ" | "PF") {
+  if (country === "US") {
+    return personType === "PJ"
+      ? { length: 9, label: "EIN" }
+      : { length: 9, label: "SSN" };
+  }
+  return personType === "PJ" ? { length: 14, label: "CNPJ" } : { length: 11, label: "CPF" };
+}
+
+// Cadastro mínimo pra criar o registro central de Client — como Client é a entidade
+// referenciada por Tarefas, Certificados, Contratos etc., o cliente criado aqui já
+// aparece em todos esses módulos automaticamente. Endereço, sócios, atividades e
+// certificados são completados na tela de edição logo em seguida.
+export async function createClient(_prevState: unknown, formData: FormData) {
+  await verifySession();
+
+  const parsed = NewClientSchema.safeParse({
+    name: formData.get("name"),
+    country: formData.get("country") || "BR",
+    personType: formData.get("personType") || "PJ",
+    document: formData.get("document") || undefined,
+    empresaId: formData.get("empresaId") || undefined,
+    cep: formData.get("cep") || undefined,
+    logradouro: formData.get("logradouro") || undefined,
+    numero: formData.get("numero") || undefined,
+    complemento: formData.get("complemento") || undefined,
+    bairro: formData.get("bairro") || undefined,
+    municipio: formData.get("municipio") || undefined,
+    uf: formData.get("uf") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const { name, country, personType, document, empresaId, cep, logradouro, numero, complemento, bairro, municipio, uf } =
+    parsed.data;
+  const digits = document ? document.replace(/\D/g, "") : "";
+  const spec = documentSpec(country, personType);
+  if (digits && digits.length !== spec.length) {
+    return { error: `${spec.label} inválido — deve ter ${spec.length} dígitos.` };
+  }
+
+  let client;
+  try {
+    client = await prisma.client.create({
+      data: {
+        name,
+        country,
+        personType,
+        cnpj: personType === "PJ" && digits ? digits : null,
+        cpf: personType === "PF" && digits ? digits : null,
+        empresaId: empresaId || null,
+        cep: cep || null,
+        logradouro: logradouro || null,
+        numero: numero || null,
+        complemento: complemento || null,
+        bairro: bairro || null,
+        municipio: municipio || null,
+        uf: uf ? uf.trim().toUpperCase() : null,
+      },
+    });
+  } catch {
+    return { error: "Já existe um cliente cadastrado com esse documento." };
+  }
+
+  revalidatePath("/clientes");
+  redirect(`/clientes/${client.id}`);
+}
 
 export type CnpjLookupResult = {
   razaoSocial: string;

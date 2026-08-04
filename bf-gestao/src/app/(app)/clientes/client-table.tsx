@@ -9,6 +9,7 @@ type ClientRow = {
   id: string;
   name: string;
   personType: string;
+  country: string;
   cnpj: string | null;
   cpf: string | null;
   tipoAtividade: string | null;
@@ -16,6 +17,12 @@ type ClientRow = {
   municipio: string | null;
   uf: string | null;
   status: string;
+  empresaId: string | null;
+};
+
+type EmpresaOption = {
+  id: string;
+  name: string;
 };
 
 const COLUMNS = ["nome", "documento", "tipo", "regime", "cidade", "status"] as const;
@@ -38,10 +45,19 @@ function columnValue(client: ClientRow, column: Column): string {
   }
 }
 
-export function ClientTable({ clients, initialUf }: { clients: ClientRow[]; initialUf?: string }) {
+export function ClientTable({
+  clients,
+  empresas,
+  initialUf,
+}: {
+  clients: ClientRow[];
+  empresas: EmpresaOption[];
+  initialUf?: string;
+}) {
   const [search, setSearch] = useState("");
   const [personTypeFilter, setPersonTypeFilter] = useState<"all" | "PJ" | "PF">("all");
-  const [ufFilter, setUfFilter] = useState(initialUf ?? "all");
+  const [empresaFilter, setEmpresaFilter] = useState("all");
+  const ufFilter = initialUf ?? "all";
   const [columnFilters, setColumnFilters] = useState<Record<Column, Set<string>>>({
     nome: new Set(),
     documento: new Set(),
@@ -67,14 +83,11 @@ export function ClientTable({ clients, initialUf }: { clients: ClientRow[]; init
     return options;
   }, [clients]);
 
-  const ufOptions = useMemo(() => {
-    return Array.from(new Set(clients.map((c) => c.uf).filter((uf): uf is string => Boolean(uf)))).sort();
-  }, [clients]);
-
   const filtered = clients.filter((client) => {
     if (search && !client.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (personTypeFilter !== "all" && client.personType !== personTypeFilter) return false;
     if (ufFilter !== "all" && client.uf !== ufFilter) return false;
+    if (empresaFilter !== "all" && client.empresaId !== empresaFilter) return false;
     for (const column of COLUMNS) {
       const selected = columnFilters[column];
       if (selected.size > 0 && !selected.has(columnValue(client, column))) return false;
@@ -126,19 +139,19 @@ export function ClientTable({ clients, initialUf }: { clients: ClientRow[]; init
           onChange={(event) => setPersonTypeFilter(event.target.value as typeof personTypeFilter)}
           className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         >
-          <option value="all">PJ e PF</option>
-          <option value="PJ">Pessoa jurídica</option>
-          <option value="PF">Pessoa física</option>
+          <option value="all">Todos</option>
+          <option value="PJ">Pessoa Jurídica</option>
+          <option value="PF">Pessoa Física</option>
         </select>
         <select
-          value={ufFilter}
-          onChange={(event) => setUfFilter(event.target.value)}
+          value={empresaFilter}
+          onChange={(event) => setEmpresaFilter(event.target.value)}
           className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
         >
-          <option value="all">Todos os estados</option>
-          {ufOptions.map((uf) => (
-            <option key={uf} value={uf}>
-              {uf}
+          <option value="all">Todas as unidades</option>
+          {empresas.map((empresa) => (
+            <option key={empresa.id} value={empresa.id}>
+              {empresa.name}
             </option>
           ))}
         </select>

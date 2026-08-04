@@ -1,3 +1,11 @@
 desktop.ini
 Thumbs.db
 .DS_Store
+
+# Dados sensíveis de clientes (certificados digitais e planilhas de controle com CPF) —
+# nunca versionar. A pasta de certificados é temporária, usada só pra importação.
+/CERTIFICADOS DIGITAIS/
+*.pfx
+*.p12
+*.key
+/BF Serviços Contábeis _Controle IRPF.xlsx

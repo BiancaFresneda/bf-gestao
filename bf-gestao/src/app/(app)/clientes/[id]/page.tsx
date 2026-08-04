@@ -54,6 +54,7 @@ export default async function ClientEditPage({
           id: client.id,
           name: client.name,
           personType: client.personType,
+          country: client.country,
           cnpj: client.cnpj,
           cpf: client.cpf,
           tradeName: client.tradeName,

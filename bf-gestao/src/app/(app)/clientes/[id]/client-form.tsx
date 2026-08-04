@@ -14,6 +14,7 @@ type ClientData = {
   id: string;
   name: string;
   personType: string;
+  country: string;
   cnpj: string | null;
   cpf: string | null;
   tradeName: string | null;
@@ -160,7 +161,7 @@ export function ClientForm({ client, empresas }: { client: ClientData; empresas:
       <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-[#24252A]">Dados básicos</h2>
-          {client.cnpj && (
+          {client.cnpj && client.country !== "US" && (
             <button
               type="button"
               onClick={handleImport}
