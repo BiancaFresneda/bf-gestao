@@ -6,17 +6,12 @@ import { TaskTemplateTable } from "./task-template-table";
 
 export default async function CadastroDeTarefasPage() {
   const session = await verifySession();
+  const isAdmin = session.role === "ADMIN";
 
-  if (session.role !== "ADMIN") {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-[#24252A]">Tarefas Recorrentes</h1>
-        <p className="mt-2 text-sm text-[#7D7874]">Apenas administradores podem acessar esta página.</p>
-      </div>
-    );
-  }
-
+  // Colaborador só enxerga o catálogo pra consulta — vê apenas as tarefas ativas, sem
+  // criar/editar nada. Tarefas novas ou mudanças passam sempre pelo Admin.
   const templates = await prisma.taskTemplate.findMany({
+    where: isAdmin ? {} : { active: true },
     include: { department: true },
     orderBy: [{ department: { name: "asc" } }, { name: "asc" }],
   });
@@ -25,23 +20,29 @@ export default async function CadastroDeTarefasPage() {
     <div>
       <ModuleHeader
         title="Tarefas Recorrentes"
-        subtitle="Catálogo de templates de tarefas recorrentes. Templates importados do sistema anterior entram inativos até terem a regra de prazo legal revisada."
+        subtitle={
+          isAdmin
+            ? "Catálogo de templates de tarefas recorrentes. Templates importados do sistema anterior entram inativos até terem a regra de prazo legal revisada."
+            : "Consulta às tarefas recorrentes ativas. Para criar ou alterar uma tarefa, peça a um administrador."
+        }
         backHref="/configuracoes"
         backLabel="Voltar para Configurações"
         hideExtras
         actions={
-          <Link
-            href="/configuracoes/tarefas/novo"
-            className="rounded-lg bg-[#B4762A] px-4 py-2 text-sm font-medium text-white hover:bg-[#9C6423]"
-          >
-            Nova tarefa
-          </Link>
+          isAdmin ? (
+            <Link
+              href="/configuracoes/tarefas/novo"
+              className="rounded-lg bg-[#B4762A] px-4 py-2 text-sm font-medium text-white hover:bg-[#9C6423]"
+            >
+              Nova tarefa
+            </Link>
+          ) : undefined
         }
       />
 
       <div className="p-8">
         <section className="rounded-xl border border-[#E1DBCC] bg-white p-6">
-          <TaskTemplateTable templates={templates} />
+          <TaskTemplateTable templates={templates} canManage={isAdmin} />
         </section>
       </div>
     </div>

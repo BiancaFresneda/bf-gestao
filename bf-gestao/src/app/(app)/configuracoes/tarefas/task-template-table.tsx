@@ -25,7 +25,7 @@ type TemplateRow = {
   active: boolean;
 };
 
-export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
+export function TaskTemplateTable({ templates, canManage }: { templates: TemplateRow[]; canManage: boolean }) {
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
@@ -64,15 +64,17 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
             </option>
           ))}
         </select>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-          className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
-        >
-          <option value="all">Todas</option>
-          <option value="active">Ativas</option>
-          <option value="inactive">Inativas</option>
-        </select>
+        {canManage && (
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+            className="rounded-lg border border-[#E1DBCC] px-3 py-2 text-sm outline-none focus:border-[#959D90]"
+          >
+            <option value="all">Todas</option>
+            <option value="active">Ativas</option>
+            <option value="inactive">Inativas</option>
+          </select>
+        )}
         <span className="self-center text-xs text-[#7D7874]">
           {filtered.length} de {templates.length} tarefas
         </span>
@@ -88,16 +90,20 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
             <th className="py-2">Meta</th>
             <th className="py-2">Multa</th>
             <th className="py-2">Status</th>
-            <th className="py-2" />
+            {canManage && <th className="py-2" />}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#EFEAE0]">
           {filtered.map((template) => (
             <tr key={template.id}>
               <td className="py-2 text-[#24252A]">
-                <Link href={`/configuracoes/tarefas/${template.id}`} className="hover:underline">
-                  {template.name}
-                </Link>
+                {canManage ? (
+                  <Link href={`/configuracoes/tarefas/${template.id}`} className="hover:underline">
+                    {template.name}
+                  </Link>
+                ) : (
+                  template.name
+                )}
               </td>
               <td className="py-2 text-[#7D7874]">{template.department.name}</td>
               <td className="py-2 text-[#7D7874]">
@@ -117,14 +123,16 @@ export function TaskTemplateTable({ templates }: { templates: TemplateRow[] }) {
                   {template.active ? "Ativa" : "Inativa"}
                 </span>
               </td>
-              <td className="py-2 text-right">
-                <button
-                  onClick={() => toggleTaskTemplateActive(template.id, !template.active)}
-                  className="text-xs text-[#7D7874] hover:text-[#24252A]"
-                >
-                  {template.active ? "Desativar" : "Ativar"}
-                </button>
-              </td>
+              {canManage && (
+                <td className="py-2 text-right">
+                  <button
+                    onClick={() => toggleTaskTemplateActive(template.id, !template.active)}
+                    className="text-xs text-[#7D7874] hover:text-[#24252A]"
+                  >
+                    {template.active ? "Desativar" : "Ativar"}
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

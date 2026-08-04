@@ -47,24 +47,28 @@ const CARDS = [
     icon: <BuildingIcon />,
     title: "Empresas",
     description: "Cadastro das empresas do grupo BF (BR e EUA) — dados cadastrais para consulta e referência.",
+    adminOnly: true,
   },
   {
     href: "/configuracoes/tarefas",
     icon: <ChecklistIcon />,
     title: "Tarefas Recorrentes",
     description: "Cadastre e configure as tarefas recorrentes que serão geradas automaticamente para os clientes.",
+    adminOnly: false,
   },
   {
     href: "/configuracoes/modulos",
     icon: <ModulesIcon />,
     title: "Módulos",
     description: "Defina os módulos/serviços oferecidos pelo escritório (Fiscal, Contábil, BPO, etc.) usados no cadastro do cliente.",
+    adminOnly: true,
   },
   {
     href: "/configuracoes/usuarios",
     icon: <TeamIcon />,
     title: "Usuários",
     description: "Gerencie a equipe e os níveis de acesso (admin, colaborador). Novos cadastros entram automaticamente.",
+    adminOnly: true,
   },
 ] as const;
 
@@ -90,22 +94,22 @@ function ModuleCard({ href, icon, title, description }: { href: string; icon: Re
 
 export default async function ConfiguracoesPage() {
   const session = await verifySession();
-
-  if (session.role !== "ADMIN") {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-[#24252A]">Configurações</h1>
-        <p className="mt-2 text-sm text-[#7D7874]">Apenas administradores podem acessar esta página.</p>
-      </div>
-    );
-  }
+  const isAdmin = session.role === "ADMIN";
+  const visibleCards = CARDS.filter((card) => isAdmin || !card.adminOnly);
 
   return (
     <div>
-      <ModuleHeader title="Configurações" subtitle="Templates, módulos, usuários e ajustes do sistema." />
+      <ModuleHeader
+        title="Configurações"
+        subtitle={
+          isAdmin
+            ? "Templates, módulos, usuários e ajustes do sistema."
+            : "Consulta ao catálogo de tarefas recorrentes. Os demais ajustes são exclusivos de administradores."
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 p-8 sm:grid-cols-2">
-        {CARDS.map((card) => (
+        {visibleCards.map((card) => (
           <ModuleCard key={card.href} {...card} />
         ))}
       </div>

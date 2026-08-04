@@ -12,8 +12,17 @@ export default async function EditarTarefaPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await verifySession();
+  const session = await verifySession();
   const { id } = await params;
+
+  if (session.role !== "ADMIN") {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-[#24252A]">Editar tarefa</h1>
+        <p className="mt-2 text-sm text-[#7D7874]">Apenas administradores podem editar tarefas recorrentes.</p>
+      </div>
+    );
+  }
 
   const [template, departments, users, clients] = await Promise.all([
     prisma.taskTemplate.findUnique({
